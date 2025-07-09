@@ -33,6 +33,7 @@ def collect_posts(subreddit_name="technology", limit=1000):
 
     with open("redditAPI/output/posts.json", "w") as f:
         json.dump(results, f, indent=2)
+    return results
 
 if __name__ == "__main__":
     collect_posts()
