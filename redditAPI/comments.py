@@ -1,14 +1,15 @@
 from config import reddit
 import json
 
-def collect_comments(post_id = "1lv6gtm"):
+def collect_comments(post_id = "1lwbtxh"):
     results = []
 
-    submission = reddit.submission(post_id)
-    submission.comments.replace_more(limit=None)
 
-    for cmt in submission.comments[:10]:
-        item = {
+    submission = reddit.submission(post_id)
+    submission.comments.replace_more(limit=0)
+
+    for cmt in submission.comments:
+        results.append({
             "id": cmt.id,
             "subreddit": cmt.subreddit.display_name,
             "post_id": post_id,
@@ -23,11 +24,14 @@ def collect_comments(post_id = "1lv6gtm"):
             # "replies" : cmt.replies # fix them children cmt sau
 
 
-        }
-        results.append(item)
 
-        with open("redditAPI/output/comments.json", "w") as f:
-            json.dump(results, f, indent=2)
+
+        })
+    # print(len(results))
+
+        # with open("redditAPI/output/comments.json", "w") as f:
+        #     json.dump(results, f, indent=2)
+    return results
 
 if __name__ == "__main__":
     collect_comments()

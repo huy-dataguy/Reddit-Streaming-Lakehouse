@@ -1,8 +1,10 @@
 from config import reddit
 import json
 
-def collect_posts(subreddit_name="technology", limit=1000):
+def collect_posts(subreddit_name="technology", limit=10):
     sub = reddit.subreddit(subreddit_name)
+
+    #data lay tuan tu, chua co lay song song
     categories = {
         "hot": sub.hot(limit=limit),
         "new": sub.new(limit=limit),
@@ -30,9 +32,12 @@ def collect_posts(subreddit_name="technology", limit=1000):
                 "num_comments": submission.num_comments,
                 "author": str(submission.author),
             })
+    
 
-    with open("redditAPI/output/posts.json", "w") as f:
-        json.dump(results, f, indent=2)
+
+
+    # with open("redditAPI/output/posts.json", "w") as f:
+    #     json.dump(results, f, indent=2)
     return results
 
 if __name__ == "__main__":
