@@ -1,7 +1,7 @@
 FROM ubuntu:noble
 
 RUN apt-get update \
-    && apt-get install -y wget -y openjdk-17-jdk
+    && apt-get install -y wget -y openjdk-17-jdk iproute2 netcat-openbsd
 
 RUN useradd -m zookeeper-u
 

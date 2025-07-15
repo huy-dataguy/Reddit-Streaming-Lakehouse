@@ -6,8 +6,10 @@ services:
     hostname: zookeeper
     networks:
       - reddit_network
-    # volumes:
-    #   - ../config/zookeeper:/home/zookeeper-u/zookeeper
+    volumes:
+      - ../config/zookeeper:/home/zookeeper-u/zookeeper
+    ports:
+      - 2181:2181
     command: tail -F anything
     
 
@@ -18,8 +20,10 @@ services:
     hostname: kafka
     networks:
       - reddit_network
-    # volumes:
-    #   - ../config/kafka:/home/kafka-u/kafka
+    volumes:
+      - ../config/kafka:/home/kafka-u/kafka
+    ports:
+      - 9092:9092
     command: tail -F anything
 
 
@@ -30,3 +34,26 @@ networks:
 
 # docker cp docker-zookeeper-1:/home/zookeeper-u/zookeeper ../config/zookeeper
 # docker cp docker-kafka-1:/home/kafka-u/kafka ../config/kafka
+
+#start kafka connect zookeep run in the background, CANT use CLI
+# ./kafka/bin/kafka-server-start.sh ./kafka/config/server.properties
+
+
+#create topic 
+#./kafka/bin/kafka-topics.sh --create --topic test-topic --bootstrap-server kafka:9092 --replication-factor 1 --partitions 64
+
+#describe topic
+#./kafka/bin/kafka-topics.sh --topic test-topic --bootstrap-server kafka:9092 --describe
+
+#run producer
+# ./kafka/bin/kafka-console-producer.sh --topic test-topic --bootstrap-server kafka:9092
+
+#run consumer
+# ./kafka/bin/kafka-console-consumer.sh --topic test-topic --bootstrap-server kafka:9092
+
+# ./kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic test-topic --from-beginning
+
+# the way to check zookeeper actual support kafka in coordinator metadata, write, read management
+# open zookeeper CLI
+# ls / # it will show all arg
+# ls /brokers/ids # show all id of all brokers in kafka
