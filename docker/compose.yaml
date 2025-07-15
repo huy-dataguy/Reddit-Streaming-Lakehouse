@@ -1,0 +1,32 @@
+services:
+  zookeeper:
+    build:
+      context: ./
+      dockerfile: zookeeper.dockerfile
+    hostname: zookeeper
+    networks:
+      - reddit_network
+    # volumes:
+    #   - ../config/zookeeper:/home/zookeeper-u/zookeeper
+    command: tail -F anything
+    
+
+  kafka:
+    build:
+      context: ./
+      dockerfile: kafka.dockerfile
+    hostname: kafka
+    networks:
+      - reddit_network
+    # volumes:
+    #   - ../config/kafka:/home/kafka-u/kafka
+    command: tail -F anything
+
+
+networks:
+  reddit_network:
+    driver: bridge
+
+
+# docker cp docker-zookeeper-1:/home/zookeeper-u/zookeeper ../config/zookeeper
+# docker cp docker-kafka-1:/home/kafka-u/kafka ../config/kafka
