@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
 from confluent_kafka import Consumer
+from multiprocessing import Process
 import time
 import json
 
-if __name__ == '__main__':
 
+def consumer_instance(consumerID):
     config = {
         'bootstrap.servers': 'kafka1:9092',
 
-        'group.id':          'submission',
+        'group.id':          'reddit_submission',
         'auto.offset.reset': 'earliest'
     }
 
@@ -27,15 +28,27 @@ if __name__ == '__main__':
                 # Initial message consumption may take up to
                 # `session.timeout.ms` for the consumer group to
                 # rebalance and start consuming
-                print("Waiting...")
+                print(f"Consumer {consumerID} Waiting...")
             elif msg.error():
-                print("ERROR: %s".format(msg.error()))
+                print(f"Consumer {consumerID} ERROR: %s".format(msg.error()))
             else:
                 # Extract the (optional) key and value, and print.
-                print("Consumed event from topic {topic}: key = {key:12} value = {value:12}".format(
+                print("Consumer {consumerID} Consumed event from topic {topic}: key = {key:12} value = {value:12}".format(consumerID = consumerID,
                     topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
     except KeyboardInterrupt:
         pass
     finally:
         # Leave group and commit final offsets
         consumer.close()
+
+if __name__ == '__main__':
+    numConsumer = 6
+    processes = []
+
+    for i in range(numConsumer):
+        p = Process(target=consumer_instance, args=(i, ))
+        p.start()
+        processes.append(p)
+    
+    for p in processes:
+        p.join()
