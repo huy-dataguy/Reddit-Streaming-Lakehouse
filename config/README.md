@@ -16,21 +16,22 @@ rm -rf /kafka/kraft-combined-logs
 ./kafka/bin/kafka-server-start.sh ./kafka/config/kraft/server.properties
 
 # show info cluster 
-./kafka/bin/kafka-metadata-quorum.sh --bootstrap-controller kafka1:9093 describe --status
+kafka-metadata-quorum.sh --bootstrap-controller kafka1:9093 describe --status
 
 # create topic 
-./kafka/bin/kafka-topics.sh --create --topic first-topic --bootstrap-server kafka1:9092 --replication-factor 2
+kafka-topics.sh --create --topic first-topic --bootstrap-server kafka1:9092 --replication-factor 2
 
 # describe topic
-./kafka/bin/kafka-topics.sh --describe --bootstrap-server kafka1:9092 --topic first-topic
+kafka-topics.sh --describe --bootstrap-server kafka1:9092 --topic first-topic
 
 # produce messing
-./kafka/bin/kafka-console-producer.sh --topic first-topic --bootstrap-server kafka1:9092
+kafka-console-producer.sh --topic first-topic --bootstrap-server kafka1:9092
 
 # consume messing
-./kafka/bin/kafka-console-consumer.sh --topic first-topic --from-beginning --bootstrap-server kafka1:9092
+kafka-console-consumer.sh --topic first-topic --from-beginning --bootstrap-server kafka1:9092
 
 
+kafka-console-consumer.sh   --topic jsontokafka   --bootstrap-server kafka1:9092   --from-beginning   --property print.key=true
 
 
 
