@@ -209,3 +209,7 @@ __marimo__/
 
 /output/
 redditAPI/output/
+config/kafka1/
+config/kafka2/
+config/kafka3/
+data/

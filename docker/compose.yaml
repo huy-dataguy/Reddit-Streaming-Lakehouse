@@ -1,18 +1,4 @@
 services:
-  # zookeeper:
-  #   build:
-  #     context: ./
-  #     dockerfile: zookeeper.dockerfile
-  #   hostname: zookeeper
-  #   networks:
-  #     - reddit_network
-  #   volumes:
-  #     - ../config/zookeeper:/home/zookeeper-u/zookeeper
-  #   ports:
-  #     - 2181:2181
-  #   command: tail -F anything
-    
-
   kafka1:
     build:
       context: ./
@@ -23,7 +9,7 @@ services:
     volumes:
       - ../config/kafka1:/home/kafka-u/kafka
     ports:
-      - 19092:9092
+      - 9092:9092
     command: tail -F anything
 
 
@@ -36,8 +22,6 @@ services:
       - reddit_network
     volumes:
       - ../config/kafka2:/home/kafka-u/kafka
-    ports:
-      - 29092:9092
     command: tail -F anything
 
 
@@ -49,11 +33,23 @@ services:
     hostname: kafka3
     networks:
       - reddit_network
-    ports:
-      - 39092:9092
     volumes:
       - ../config/kafka3:/home/kafka-u/kafka
     command: tail -F anything
+
+
+
+  kafka_confluent:
+    build:
+      context: ./
+      dockerfile: confluent_kafka.dockerfile
+    hostname: confluent
+    networks:
+      - reddit_network
+    volumes:
+      - ../src/confluent_kafka:/home/confluent_kafka/python_kafka
+    command: tail -F anything
+
 
     
 networks:
