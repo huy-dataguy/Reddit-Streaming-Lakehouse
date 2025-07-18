@@ -1,0 +1,59 @@
+services:
+  kafka1:
+    build:
+      context: ./
+      dockerfile: kafka.dockerfile
+    hostname: kafka1
+    networks:
+      - reddit_network
+    volumes:
+      - ../config/kafka1:/home/kafka-u/kafka
+    ports:
+      - 9092:9092
+    command: tail -F anything
+
+
+  kafka2:
+    build:
+      context: ./
+      dockerfile: kafka.dockerfile
+    hostname: kafka2
+    networks:
+      - reddit_network
+    volumes:
+      - ../config/kafka2:/home/kafka-u/kafka
+    command: tail -F anything
+
+
+
+  kafka3:
+    build:
+      context: ./
+      dockerfile: kafka.dockerfile
+    hostname: kafka3
+    networks:
+      - reddit_network
+    volumes:
+      - ../config/kafka3:/home/kafka-u/kafka
+    command: tail -F anything
+
+
+
+  kafka_confluent:
+    build:
+      context: ./
+      dockerfile: confluent_kafka.dockerfile
+    hostname: confluent
+    networks:
+      - reddit_network
+    volumes:
+      - ../src/confluent_kafka:/home/confluent_kafka/python_kafka
+    command: tail -F anything
+
+
+    
+networks:
+  reddit_network:
+    driver: bridge
+    name: reddit_network
+    external: true 
