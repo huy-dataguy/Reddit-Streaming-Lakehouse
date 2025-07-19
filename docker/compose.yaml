@@ -39,7 +39,7 @@ services:
 
 
 
-  kafka_confluent:
+  confluent_kafka:
     build:
       context: ./
       dockerfile: confluent_kafka.dockerfile
