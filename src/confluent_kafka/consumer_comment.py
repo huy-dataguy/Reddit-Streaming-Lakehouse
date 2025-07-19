@@ -6,18 +6,17 @@ import time
 import json
 
 
-def consumer_instance(consumerID):
+def consumerInstance(consumerID, topic):
     config = {
         'bootstrap.servers': 'kafka1:9092',
 
-        'group.id':          'reddit_submission',
+        'group.id':          'GRredditComment',
         'auto.offset.reset': 'earliest'
     }
 
     consumer = Consumer(config)
 
     # Subscribe to topic
-    topic = "demo"
     consumer.subscribe([topic]) #register consumer to topic
 
     # Poll for new messages from Kafka and print them.
@@ -44,9 +43,9 @@ def consumer_instance(consumerID):
 if __name__ == '__main__':
     numConsumer = 6
     processes = []
-
+    topic = "redditComment"
     for i in range(numConsumer):
-        p = Process(target=consumer_instance, args=(i, ))
+        p = Process(target=consumerInstance, args=(i, topic))
         p.start()
         processes.append(p)
     
