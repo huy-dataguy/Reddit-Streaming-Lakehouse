@@ -34,6 +34,12 @@ kafka-console-consumer.sh --topic first-topic --from-beginning --bootstrap-serve
 kafka-console-consumer.sh   --topic jsontokafka   --bootstrap-server kafka1:9092   --from-beginning   --property print.key=true
 
 
+# describe group consumer
+## list
+kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --list
+reddit_submission
+## detail group consumer
+kafka-consumer-groups.sh --bootstrap-server kafka1:9092   --describe --group redditSubmission
 
 
 
