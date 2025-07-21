@@ -1,13 +1,15 @@
 services:
   kafka1:
     build:
-      context: ./
+      context: ./kafka_cluster
       dockerfile: kafka.dockerfile
     hostname: kafka1
+    image: kafka1
     networks:
       - reddit_network
     volumes:
-      - ../config/kafka1:/home/kafka-u/kafka
+      # - ../config/kafka1:/home/kafka_user/kafka
+      - ..config/kafka_cluster/1server.properties:/home/kafka_user/kafka/config/kraft/server.properties
     ports:
       - 9092:9092
     command: tail -F anything
@@ -15,42 +17,135 @@ services:
 
   kafka2:
     build:
-      context: ./
+      context: ./kafka_cluster
       dockerfile: kafka.dockerfile
     hostname: kafka2
     networks:
       - reddit_network
+    image: kafka2
     volumes:
-      - ../config/kafka2:/home/kafka-u/kafka
+      # - ../config/kafka2:/home/kafka_user/kafka
+      - ..config/kafka_cluster/2server.properties:/home/kafka_user/kafka/config/kraft/server.properties
+
     command: tail -F anything
 
 
 
   kafka3:
     build:
-      context: ./
+      context: ./kafka_cluster
       dockerfile: kafka.dockerfile
     hostname: kafka3
     networks:
       - reddit_network
+    image: kafka3
     volumes:
-      - ../config/kafka3:/home/kafka-u/kafka
+      # - ../config/kafka3:/home/kafka_user/kafka
+        - ..config/kafka_cluster/3server.properties:/home/kafka_user/kafka/config/kraft/server.properties
+
     command: tail -F anything
 
 
 
   confluent_kafka:
     build:
-      context: ./
+      context: ./kafka_cluster
       dockerfile: confluent_kafka.dockerfile
-    hostname: confluent
+    hostname: confluent_kafka
     networks:
       - reddit_network
+    image: confluent_kafka
     volumes:
-      - ../src/confluent_kafka:/home/confluent_kafka/python_kafka
+      - ../src/confluent_kafka:/home/confluent_kafka_user/python_kafka
     command: tail -F anything
 
+  sparkmaster:
+    build:
+      context: ../
+      dockerfile: docker/spark_on_YARN/master.dockerfile
+    ports:
+      - 9004:9004
+      - 9870:9870
+      - 8080:8080
+    image: sparkmaster
+    hostname: sparkmaster
+    networks:
+      - reddit_network
+    
 
+  sparkworker1:
+    build:
+      context: ../
+      dockerfile: docker/spark_on_YARN/worker.dockerfile
+    image: sparkworker1
+    hostname: sparkworker1
+    networks:
+      - reddit_network
+    ports:
+      - 18042:8042
+    
+
+  sparkworker2:
+    build:
+      context: ../
+      dockerfile: docker/spark_on_YARN/worker.dockerfile
+    image: sparkworker2
+    hostname: sparkworker2
+    networks:
+      - reddit_network
+    ports:
+      - 28042:8042
+
+
+  minio1:
+    image: minio/minio:latest
+    container_name: minio1
+    ports:
+      - "9001:9000"   
+      - "9005:9005"   
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: miniopasswd
+    # volumes:
+    #   - ./data-minio/minio1-data:/data
+    command: server http://minio1/data http://minio2/data http://minio3/data --console-address ":9005"
+    networks:
+      - reddit_network
+
+  minio2:
+    image: minio/minio:latest
+    container_name: minio2
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: miniopasswd
+    # volumes:
+    #   - ./data-minio/minio2-data:/data
+    command: server http://minio1/data http://minio2/data http://minio3/data
+    networks:
+      - reddit_network
+
+  minio3:
+    image: minio/minio:latest
+    container_name: minio3
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: miniopasswd
+    # volumes:
+    #   - ./data-minio/minio3-data:/data
+    command: server http://minio1/data http://minio2/data http://minio3/data
+    networks:
+      - reddit_network
+
+  awscli:
+    image: amazon/aws-cli
+    container_name: awscli
+    hostname: awscli
+    environment:
+      AWS_ACCESS_KEY_ID: awscli
+      AWS_SECRET_ACCESS_KEY: awscli
+    entrypoint: ["tail", "-f", "/dev/null"]
+    networks:
+      - reddit_network
     
 networks:
   reddit_network:
