@@ -5,7 +5,8 @@
     </property>
     <property>
         <name>dfs.datanode.data.dir</name>
-        <value>/home/sparkuser/hadoop/hadoop_data/hdfs/datanode</value>
+        <value>/home/sparkuser/hadoop/hdfs/datanode</value>
+
     </property>
     <property>
         <name>dfs.permissions.enabled</name>

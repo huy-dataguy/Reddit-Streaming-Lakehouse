@@ -1,7 +1,7 @@
 <configuration>
     <property>
         <name>yarn.resourcemanager.hostname</name>
-        <value>sparkmaster</value>
+        <value>hadoopmaster</value>
     </property>
 
     <property>
@@ -16,23 +16,23 @@
 
     <property>
         <name>yarn.resourcemanager.scheduler.address</name>
-        <value>sparkmaster:9002</value>
+        <value>hadoopmaster:9002</value>
     </property>
     <property>
         <name>yarn.resourcemanager.address</name>
-        <value>sparkmaster:9003</value>
+        <value>hadoopmaster:9003</value>
     </property>
     <property>
         <name>yarn.resourcemanager.webapp.address</name>
-        <value>sparkmaster:9004</value>
+        <value>hadoopmaster:9004</value>
     </property>
     <property>
         <name>yarn.resourcemanager.resource-tracker.address</name>
-        <value>sparkmaster:9005</value>
+        <value>hadoopmaster:9005</value>
     </property>
     <property>
         <name>yarn.resourcemanager.admin.address</name>
-        <value>sparkmaster:9006</value>
+        <value>hadoopmaster:9006</value>
     </property>
 
     <property>
