@@ -213,3 +213,4 @@ config/kafka1/
 config/kafka2/
 config/kafka3/
 data/
+data-minio/
