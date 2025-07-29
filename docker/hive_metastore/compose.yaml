@@ -1,8 +1,7 @@
-
 networks:
-  data_network:
+  reddit_network:
     driver: bridge
-    name: data_network
+    name: reddit_network
     external: true 
 
 services:
@@ -17,7 +16,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - data_network
+      - reddit_network
 
   hive-metastore:
     container_name: hive-metastore
@@ -26,13 +25,13 @@ services:
     ports:
       - '9083:9083' # Metastore Thrift
     volumes:
-      - ./conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml:ro
+      - ../../config/hive_metastore/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml:ro
     environment:
       METASTORE_DB_HOSTNAME: mysql
     depends_on:
       - mysql
     networks:
-      - data_network
+      - reddit_network
 
 volumes:
   mysql-data:
