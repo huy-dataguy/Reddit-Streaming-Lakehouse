@@ -1,63 +1,63 @@
 services:
-  kafka1:
-    build:
-      context: ./kafka_cluster
-      dockerfile: kafka.dockerfile
-    hostname: kafka1
-    image: kafka1
-    networks:
-      - reddit_network
-    volumes:
-      # - ../config/kafka1:/home/kafka_user/kafka
-      - ..config/kafka_cluster/1server.properties:/home/kafka_user/kafka/config/kraft/server.properties
-    ports:
-      - 9092:9092
-    command: tail -F anything
+  # kafka1:
+  #   build:
+  #     context: ./kafka_cluster
+  #     dockerfile: kafka.dockerfile
+  #   hostname: kafka1
+  #   image: kafka1
+  #   networks:
+  #     - reddit_network
+  #   volumes:
+  #     # - ../config/kafka1:/home/kafka_user/kafka
+  #     - ..config/kafka_cluster/1server.properties:/home/kafka_user/kafka/config/kraft/server.properties
+  #   ports:
+  #     - 9092:9092
+  #   command: tail -F anything
 
 
-  kafka2:
-    build:
-      context: ./kafka_cluster
-      dockerfile: kafka.dockerfile
-    hostname: kafka2
-    networks:
-      - reddit_network
-    image: kafka2
-    volumes:
-      # - ../config/kafka2:/home/kafka_user/kafka
-      - ..config/kafka_cluster/2server.properties:/home/kafka_user/kafka/config/kraft/server.properties
+  # kafka2:
+  #   build:
+  #     context: ./kafka_cluster
+  #     dockerfile: kafka.dockerfile
+  #   hostname: kafka2
+  #   networks:
+  #     - reddit_network
+  #   image: kafka2
+  #   volumes:
+  #     # - ../config/kafka2:/home/kafka_user/kafka
+  #     - ..config/kafka_cluster/2server.properties:/home/kafka_user/kafka/config/kraft/server.properties
 
-    command: tail -F anything
-
-
-
-  kafka3:
-    build:
-      context: ./kafka_cluster
-      dockerfile: kafka.dockerfile
-    hostname: kafka3
-    networks:
-      - reddit_network
-    image: kafka3
-    volumes:
-      # - ../config/kafka3:/home/kafka_user/kafka
-        - ..config/kafka_cluster/3server.properties:/home/kafka_user/kafka/config/kraft/server.properties
-
-    command: tail -F anything
+  #   command: tail -F anything
 
 
 
-  confluent_kafka:
-    build:
-      context: ./kafka_cluster
-      dockerfile: confluent_kafka.dockerfile
-    hostname: confluent_kafka
-    networks:
-      - reddit_network
-    image: confluent_kafka
-    volumes:
-      - ../src/confluent_kafka:/home/confluent_kafka_user/python_kafka
-    command: tail -F anything
+  # kafka3:
+  #   build:
+  #     context: ./kafka_cluster
+  #     dockerfile: kafka.dockerfile
+  #   hostname: kafka3
+  #   networks:
+  #     - reddit_network
+  #   image: kafka3
+  #   volumes:
+  #     # - ../config/kafka3:/home/kafka_user/kafka
+  #       - ..config/kafka_cluster/3server.properties:/home/kafka_user/kafka/config/kraft/server.properties
+
+  #   command: tail -F anything
+
+
+
+  # confluent_kafka:
+  #   build:
+  #     context: ./kafka_cluster
+  #     dockerfile: confluent_kafka.dockerfile
+  #   hostname: confluent_kafka
+  #   networks:
+  #     - reddit_network
+  #   image: confluent_kafka
+  #   volumes:
+  #     - ../src/confluent_kafka:/home/confluent_kafka_user/python_kafka
+  #   command: tail -F anything
 
   sparkmaster:
     build:
@@ -108,7 +108,7 @@ services:
       MINIO_ROOT_PASSWORD: miniopasswd
     # volumes:
     #   - ./data-minio/minio1-data:/data
-    command: server http://minio1/data http://minio2/data http://minio3/data --console-address ":9005"
+    command: server http://minio1/data http://minio2/data --console-address ":9005"
     networks:
       - reddit_network
 
@@ -120,19 +120,7 @@ services:
       MINIO_ROOT_PASSWORD: miniopasswd
     # volumes:
     #   - ./data-minio/minio2-data:/data
-    command: server http://minio1/data http://minio2/data http://minio3/data
-    networks:
-      - reddit_network
-
-  minio3:
-    image: minio/minio:latest
-    container_name: minio3
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: miniopasswd
-    # volumes:
-    #   - ./data-minio/minio3-data:/data
-    command: server http://minio1/data http://minio2/data http://minio3/data
+    command: server http://minio1/data http://minio2/data
     networks:
       - reddit_network
 
