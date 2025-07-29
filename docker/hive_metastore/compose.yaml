@@ -1,3 +1,10 @@
+
+networks:
+  data_network:
+    driver: bridge
+    name: data_network
+    external: true 
+
 services:
   mysql:
     image: mysql:8.4.5
@@ -7,31 +14,25 @@ services:
       MYSQL_DATABASE: metastore
     ports:
       - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
     networks:
-      - reddit_network
+      - data_network
 
-
-  hive_service:
-    build:
-      context: ../..
-      dockerfile: docker/hive_metastore/dockerfile
-    container_name: hive_service
-    hostname: hive_service
+  hive-metastore:
+    container_name: hive-metastore
+    hostname: hive-metastore
+    image: 'bitsondatadev/hive-metastore:latest'
     ports:
-      - "9083:9083"
+      - '9083:9083' # Metastore Thrift
+    volumes:
+      - ./conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml:ro
+    environment:
+      METASTORE_DB_HOSTNAME: mysql
     depends_on:
       - mysql
-    environment:
-      HIVE_METASTORE_DB_TYPE: mysql
-      HIVE_METASTORE_DB_HOST: mysql
-      HIVE_METASTORE_DB_PORT: 3306
-      HIVE_METASTORE_DB_NAME: metastore
-      HIVE_METASTORE_DB_USER: root
-      HIVE_METASTORE_DB_PASSWORD: root
     networks:
-      - reddit_network
-networks:
-  reddit_network:
-    driver: bridge
-    name: reddit_network
-    external: true 
+      - data_network
+
+volumes:
+  mysql-data:

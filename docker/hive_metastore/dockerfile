@@ -1,55 +1,107 @@
-FROM ubuntu:noble
+# FROM base
 
-RUN echo "root:root" | chpasswd
+# USER hadoopquochuy
+# WORKDIR /home/hadoopquochuy
 
-RUN apt-get update && \
-    apt-get install -y openjdk-11-jdk wget ssh openssh-server vim sudo telnet iputils-ping curl zip unzip
-    
-RUN useradd -m  hiveuser
-RUN echo "hiveuser:hive" | chpasswd
+# # Tải và giải nén Hive
+# RUN wget -q https://archive.apache.org/dist/hive/hive-2.3.9/apache-hive-2.3.9-bin.tar.gz && \
+#     tar -xzf apache-hive-2.3.9-bin.tar.gz && \
+#     mv apache-hive-2.3.9-bin hive && \ 
+#     rm apache-hive-2.3.9-bin.tar.gz
+
+# # Thiết lập biến môi trường Hive
+# ENV HIVE_HOME=/home/hadoopquochuy/hive
+# ENV PATH=$PATH:$HIVE_HOME/bin
+
+# # Cài đặt MySQL Connector
+# RUN wget -q https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.30/mysql-connector-java-8.0.30.jar -O $HIVE_HOME/lib/mysql-connector-java-8.0.30.jar
+
+# # --- Xử lý xung đột JAR và thêm thư viện S3A ---
+# # Đảm bảo phiên bản Hadoop-AWS và AWS SDK v1 tương thích với Hive 2.3.9
+# ENV HADOOP_AWS_VERSION=3.1.4
+# ENV AWS_SDK_V1_BUNDLE_VERSION=1.11.271 
+# ENV GUAVA_VERSION=28.0-jre
+
+# # Xóa tất cả các phiên bản Guava cũ từ cả Hive và Hadoop libs
+# # Sử dụng 'find' để bao quát các tên file có thể khác nhau (ví dụ: guava-xyz.jar)
+# RUN find ${HIVE_HOME}/lib -name "guava-*.jar" -delete || true && \
+#     find /home/hadoopquochuy/hadoop/share/hadoop/common/lib -name "guava-*.jar" -delete || true && \
+#     # Thêm phiên bản Guava mới
+#     wget -q https://repo1.maven.org/maven2/com/google/guava/guava/${GUAVA_VERSION}/guava-${GUAVA_VERSION}.jar -O $HIVE_HOME/lib/guava-${GUAVA_VERSION}.jar && \
+#     # Tạo symlink hoặc copy Guava mới vào thư mục Hadoop lib để đảm bảo cả Hive và Hadoop dùng chung
+#     ln -s $HIVE_HOME/lib/guava-${GUAVA_VERSION}.jar /home/hadoopquochuy/hadoop/share/hadoop/common/lib/guava-${GUAVA_VERSION}.jar || true
+
+# # Tải các JAR cần thiết cho S3A (MinIO)
+# RUN wget -q https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar -O $HIVE_HOME/lib/hadoop-aws-${HADOOP_AWS_VERSION}.jar && \
+#     wget -q https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${AWS_SDK_V1_BUNDLE_VERSION}/aws-java-sdk-bundle-${AWS_SDK_V1_BUNDLE_VERSION}.jar -O $HIVE_HOME/lib/aws-java-sdk-bundle-${AWS_SDK_V1_BUNDLE_VERSION}.jar && \
+#     # Thêm các thư viện Jackson và Gson cần thiết cho Hive/Hadoop
+#     wget -q https://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.9/gson-2.8.9.jar -O $HIVE_HOME/lib/gson-2.8.9.jar && \
+#     wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.13.5/jackson-core-2.13.5.jar -O $HIVE_HOME/lib/jackson-core-2.13.5.jar && \
+#     wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.13.5/jackson-databind-2.13.5.jar -O $HIVE_HOME/lib/jackson-databind-2.13.5.jar && \
+#     wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.13.5/jackson-annotations-2.13.5.jar -O $HIVE_HOME/lib/jackson-annotations-2.13.5.jar && \
+#     wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-cbor/2.13.5/jackson-dataformat-cbor-2.13.5.jar -O $HIVE_HOME/lib/jackson-dataformat-cbor-2.13.5.jar && \
+#     wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-ion/2.13.5/jackson-dataformat-ion-2.13.5.jar -O $HIVE_HOME/lib/jackson-dataformat-ion-2.13.5.jar && \
+#     wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/module/jackson-module-afterburner/2.13.5/jackson-module-afterburner-2.13.5.jar -O $HIVE_HOME/lib/jackson-module-afterburner-2.13.5.jar && \
+#     # Thư viện Joda Time và HttpComponents cũng cần thiết cho AWS SDK v1
+#     wget -q https://repo1.maven.org/maven2/joda-time/joda-time/2.10.13/joda-time-2.10.13.jar -O $HIVE_HOME/lib/joda-time-2.10.13.jar && \
+#     wget -q https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar -O $HIVE_HOME/lib/httpclient-4.5.13.jar && \
+#     wget -q https://repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar -O $HIVE_HOME/lib/httpcore-4.4.13.jar
+
+# # --- Kết thúc xử lý JAR ---
+
+# # Copy cấu hình Hive
+# COPY ./conf/hive-site.xml $HIVE_HOME/conf/hive-site.xml
+
+# # Expose port Hive Metastore (9083)
+# EXPOSE 9083
+
+# # Cài dos2unix và đặt quyền thực thi cho entrypoint script
+# USER root
+# RUN apt-get update && apt-get install -y dos2unix
+# COPY entrypoint.sh /entrypoint.sh
+# RUN dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
+
+# # Xóa SLF4J bị trùng lặp TRƯỚC KHI chạy ENTRYPOINT (từ thư mục Hadoop chung)
+# RUN rm -f /home/hadoopquochuy/hadoop/share/hadoop/common/lib/slf4j-reload4j-1.7.36.jar || true
+
+# ENTRYPOINT ["/entrypoint.sh"]
 
 
-USER hiveuser
+FROM base
 
-WORKDIR /home/hiveuser
-
-RUN wget https://dlcdn.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz && \
-    tar -xzf hadoop-3.4.1.tar.gz && \
-    mv hadoop-3.4.1 hadoop && \
-    rm hadoop-3.4.1.tar.gz
-
-RUN wget -q https://archive.apache.org/dist/hive/hive-2.3.9/apache-hive-2.3.9-bin.tar.gz && \
-    tar -xzf apache-hive-2.3.9-bin.tar.gz && \
-    mv apache-hive-2.3.9-bin hive && \
-    rm apache-hive-2.3.9-bin.tar.gz
-
-# RUN mkdir -p /home/hiveuser/.ssh && \
-#     ssh-keygen -t rsa -P '' -f /home/hiveuser/.ssh/id_rsa && \
-#     cat /home/hiveuser/.ssh/id_rsa.pub >> /home/hiveuser/.ssh/authorized_keys && \
-#     chmod 600 /home/hiveuser/.ssh/authorized_keys && \
-#     chown -R hiveuser:hiveuser /home/hiveuser/.ssh
+USER hadoopquochuy
+WORKDIR /home/hadoopquochuy
 
 
-RUN echo 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'>>/home/hiveuser/hadoop/etc/hadoop/hadoop-env.sh
-RUN echo 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'>>~/.bashrc
+# RUN wget -q https://archive.apache.org/dist/hive/hive-2.3.9/apache-hive-2.3.9-bin.tar.gz && \
+#     tar -xzf apache-hive-2.3.9-bin.tar.gz && \
+#     mv apache-hive-2.3.9-bin hive && \
+#     rm apache-hive-2.3.9-bin.tar.gz
 
-RUN echo 'export HADOOP_HOME=/home/hiveuser/hadoop'>>~/.bashrc
-RUN echo 'export PATH=$PATH:$HADOOP_HOME/sbin' >> ~/.bashrc
-RUN echo 'export PATH=$PATH:$HADOOP_HOME/bin' >> ~/.bashrc
+# # Thiết lập biến môi trường Hive
+# ENV HIVE_HOME=/home/hadoopquochuy/hive
 
-RUN echo 'export HIVE_HOME=/home/hiveuser/hive' >> ~/.bashrc
+# ENV PATH=$PATH:$HIVE_HOME/bin
 
-RUN echo 'export PATH=$PATH:$HIVE_HOME/bin' >> ~/.bashrc
+# # COPY hive-site.xml $HIVE_HOME/conf/hive-site.xml
 
-COPY config/hive_metastore/hive-site.xml hive/conf/hive-site.xml
+# # Cài đặt MySQL Connector
+# RUN wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.20/mysql-connector-java-8.0.20.jar && \
+#     mv mysql-connector-java-8.0.20.jar $HIVE_HOME/lib/
 
-ENV HIVE_HOME=/home/hiveuser/hive
+# RUN echo "export HIVE_HOME=/home/hadoopquochuy/hive" >> /home/hadoopquochuy/.bashrc && \
+#     echo "export PATH=\$PATH:\$HIVE_HOME/bin" >> /home/hadoopquochuy/.bashrc
+# RUN echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> /home/hadoopquochuy/hadoop/etc/hadoop/hadoop-env.sh
 
-RUN wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.20/mysql-connector-java-8.0.20.jar && \
-    mv mysql-connector-java-8.0.20.jar $HIVE_HOME/lib/
+# # Expose port Hive Metastore (9083)
+# EXPOSE 9083
 
-USER root
-COPY config/hive_metastore/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# COPY entrypoint.sh /entrypoint.sh
+# USER root
+# RUN apt-get update && apt-get install -y dos2unix
 
-ENTRYPOINT [ "/entrypoint.sh" ]
+# RUN dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
+
+# ENTRYPOINT ["/entrypoint.sh"]
+
+
