@@ -3,6 +3,9 @@ config kafka, spark, trino, superset......
 
 > **NOTE** 
 
+wget https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.9.2/iceberg-spark-runtime-3.5_2.12-1.9.2.jar -O iceberg.jar
+
+
 # Insert to .bashrc
 KAFKA_CLUSTER_ID="Q_6ATv-PTJGaFkf27OW8Bg"
 

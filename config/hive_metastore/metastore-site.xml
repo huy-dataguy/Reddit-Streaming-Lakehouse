@@ -1,0 +1,85 @@
+<configuration>
+
+<!-- Warehouse location in S3 (MinIO) -->
+
+    <property>
+
+        <name>hive.metastore.warehouse.dir</name>
+
+        <value>s3a://warehouse/</value>
+
+    </property>
+
+
+    <!-- URI của Hive Metastore Thrift service -->
+    <property>
+        <name>metastore.thrift.uris</name>
+        <value>thrift://hive-metastore:9083</value>
+        <description>Thrift URI for the remote metastore. Used by metastore client to connect.</description>
+    </property>
+
+    <!-- Các tác vụ nền luôn chạy -->
+    <property>
+        <name>metastore.task.threads.always</name>
+        <value>org.apache.hadoop.hive.metastore.events.EventCleanerTask,org.apache.hadoop.hive.metastore.MaterializationsCacheCleanerTask</value>
+    </property>
+
+    <!-- Proxy xử lý biểu thức phân vùng -->
+    <property>
+        <name>metastore.expression.proxy</name>
+        <value>org.apache.hadoop.hive.metastore.DefaultPartitionExpressionProxy</value>
+    </property>
+
+    <!-- Cấu hình kết nối cơ sở dữ liệu MySQL -->
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.mysql.cj.jdbc.Driver</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mysql://mysql:3306/metastore</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>root</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>root</value>
+    </property>
+
+    <property>
+        <name>fs.s3a.impl</name>
+        <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
+    </property>
+
+    <property>
+        <name>fs.s3a.access.key</name>
+        <value>minio</value>
+    </property>
+
+    <property>
+        <name>fs.s3a.secret.key</name>
+        <value>mypassword</value>
+    </property>
+
+    <property>
+        <name>fs.s3a.endpoint</name>
+        <value>http://minio1:9000</value>
+    </property>
+
+    <property>
+        <name>fs.s3a.path.style.access</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>fs.s3a.aws.credentials.provider</name>
+        <value>org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider</value>
+        <description>Explicitly set the S3A credential provider to use access and secret keys.</description>
+    </property>
+
+</configuration>
