@@ -1,7 +1,7 @@
 <configuration>
     <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://sparkmaster:9000</value>
+        <value>hdfs://hadoopmaster:9000</value>
     </property>
     <property>
         <name>fs.s3a.access.key</name>
@@ -9,7 +9,7 @@
     </property>
     <property>
         <name>fs.s3a.secret.key</name>
-        <value>miniopasswd</value>
+        <value>mypassword</value>
     </property>
     <property>
         <name>fs.s3a.endpoint</name>
@@ -27,6 +27,25 @@
         <name>fs.s3a.impl</name>
         <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
     </property>
+
+    <property>
+
+		<name>hadoop.tmp.dir</name>
+
+		<value>/home/sparkuser/tmp</value>
+
+		<description>Temporary Directory.</description>
+
+	</property>
+
+	<property>
+  		<name>hadoop.proxyuser.sparkuser.hosts</name>
+		<value>*</value>
+	</property>
+	<property>
+  		<name>hadoop.proxyuser.sparkuser.groups</name>
+  		<value>*</value>
+	</property>
 
   
 </configuration>

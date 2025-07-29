@@ -33,15 +33,18 @@ RUN mkdir -p /home/sparkuser/.ssh && \
     cat /home/sparkuser/.ssh/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys && \
     chmod 600 /home/sparkuser/.ssh/authorized_keys && \
     chown -R sparkuser:sparkuser /home/sparkuser/.ssh
-
+    
+COPY config/spark_on_YARN/base/core-site.xml hadoop/etc/hadoop/core-site.xml
+COPY config/spark_on_YARN/base/yarn-site.xml hadoop/etc/hadoop/yarn-site.xml
+COPY config/spark_on_YARN/base/mapred-site.xml hadoop/etc/hadoop/mapred-site.xml
 RUN echo 'export HADOOP_HOME=/home/sparkuser/hadoop'>>~/.bashrc
 RUN echo 'export SPARK_HOME=/home/sparkuser/spark'>>~/.bashrc
-RUN echo 'export PATH=$PATH:$HADOOP_HOME/sbin' >> ~/.bashrc
-RUN echo 'export PATH=$PATH:$HADOOP_HOME/bin' >> ~/.bashrc
+
 
 RUN echo 'export PATH=$PATH:$SPARK_HOME/bin'>>~/.bashrc
 RUN echo 'export PATH="$SPARK_HOME/sbin:$PATH"'>>~/.bashrc
-
+RUN echo 'export PATH=$PATH:$HADOOP_HOME/sbin' >> ~/.bashrc
+RUN echo 'export PATH=$PATH:$HADOOP_HOME/bin' >> ~/.bashrc
 
 RUN echo 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'>>/home/sparkuser/hadoop/etc/hadoop/hadoop-env.sh
 
