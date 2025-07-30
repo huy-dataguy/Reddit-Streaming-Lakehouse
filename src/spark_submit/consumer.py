@@ -34,8 +34,7 @@ df_kafka = (spark.readStream
 df_parsed = (df_kafka
     .selectExpr("CAST(value AS STRING) as json_str")
     .select(from_json(col("json_str"), schema).alias("data"))
-    .select("data.*")
-    .withColumn("fan", to_timestamp("fan")))
+    .select("data.*"))
 
 query = (df_parsed.writeStream
     .format("iceberg")
