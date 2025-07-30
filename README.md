@@ -114,10 +114,10 @@ spark-submit consumer.py
 
 > note sau khi stream data vô thì nó lỗi dung lượng..data thì đã load được vô bronze r, nên ok, lỗi này fix sau (MN fix :))
 
-- 4. test da tao duoc iceberg 
-````bash
+- 4. test da tao duoc iceberg
+     
+```bash
 spark-shell \
-  --packages org.apache.iceberg:iceberg-spark-runtime-3.2_2.12:1.3.1 \
   --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog \
   --conf spark.sql.catalog.spark_catalog.type=hive \
   --conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
