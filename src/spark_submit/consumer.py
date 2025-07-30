@@ -35,7 +35,7 @@ df_parsed = (df_kafka
     .selectExpr("CAST(value AS STRING) as json_str")
     .select(from_json(col("json_str"), schema).alias("data"))
     .select("data.*")
-    .withColumn("ts", to_timestamp("ts")))
+    .withColumn("fan", to_timestamp("fan")))
 
 query = (df_parsed.writeStream
     .format("iceberg")
