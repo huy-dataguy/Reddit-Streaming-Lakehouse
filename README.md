@@ -63,19 +63,7 @@ docker exec -it kafka1 bash
 ```bash
 kafka-metadata-quorum.sh --bootstrap-controller kafka1:9093 describe --status
 ```
-
-ans:
-
-kafka_user@kafka1:~$ kafka-metadata-quorum.sh --bootstrap-controller kafka1:9093 describe --status
-ClusterId:              Q_6ATv-PTJGaFkf27OW8Bg
-LeaderId:               3
-LeaderEpoch:            15
-HighWatermark:          82
-MaxFollowerLag:         0
-MaxFollowerLagTimeMs:   72
-CurrentVoters:          [1,2,3]
-CurrentObservers:       []
-kafka_user@kafka1:~$ 
+<img width="1160" height="229" alt="image" src="https://github.com/user-attachments/assets/b15217dc-4e5e-4e87-b500-b509526e5045" />
 
 #### 5.4 create topic 
 ```bash
@@ -85,6 +73,8 @@ kafka-topics.sh --create --topic iceberg-topic --bootstrap-server kafka1:9092 --
 ```bash
 kafka-topics.sh --describe --bootstrap-server kafka1:9092 --topic iceberg-topic
 ```
+<img width="1197" height="229" alt="image" src="https://github.com/user-attachments/assets/ce017e13-b46f-49dc-b541-e569752fc465" />
+
 ## 6. Stream data kafka to iceberg
 ```bash
 docker exec -it confluent_kafka bash
@@ -94,6 +84,8 @@ docker exec -it confluent_kafka bash
 ```bash
 python python_kafka/icebergtest/producer.py
 ```
+<img width="1148" height="247" alt="image" src="https://github.com/user-attachments/assets/7c3aa258-525d-4f47-afad-98e3c217c3b9" />
+
 
 #### 6.2 consumer kafka to bronze 
 ```bash
