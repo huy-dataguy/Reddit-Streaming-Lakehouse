@@ -30,7 +30,7 @@ docker compose -f minio.compose.yaml up -d
 ```
 ## 4. build - run hive metastore
 
-create bucket **warehouse** in minio dcm khong tao no loi
+create bucket **warehouse** **deltalake** in minio dcm khong tao no loi
 
 ```bash
 docker compose -f hive.compose.yaml up -d
