@@ -18,10 +18,10 @@ RUN wget https://dlcdn.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz
     mv hadoop-3.4.1 hadoop && \
     rm hadoop-3.4.1.tar.gz
 
-RUN wget https://dlcdn.apache.org/spark/spark-3.5.6/spark-3.5.6-bin-without-hadoop.tgz && \
-    tar -xzf spark-3.5.6-bin-without-hadoop.tgz && \
-    mv spark-3.5.6-bin-without-hadoop spark && \
-    rm spark-3.5.6-bin-without-hadoop.tgz
+RUN wget https://dlcdn.apache.org/spark/spark-3.5.6/spark-3.5.6-bin-hadoop3-scala2.13.tgz && \
+    tar -xzf spark-3.5.6-bin-hadoop3-scala2.13.tgz && \
+    mv spark-3.5.6-bin-hadoop3-scala2.13 spark && \
+    rm spark-3.5.6-bin-hadoop3-scala2.13.tgz
 
 
 RUN curl -s "https://get.sdkman.io" | bash && \
