@@ -98,14 +98,20 @@ docker exec -it client bash
 ```bash
 spark.sql("create database spark_catalog.bronze")
 ```
+<img width="626" height="104" alt="image" src="https://github.com/user-attachments/assets/55f21c7b-3430-4165-a032-fda0cec3c08c" />
+
 - 2. vim consumer.py
 ```python
 code ở folder src/spark_submit copy paster vô <3
 ```
+<img width="559" height="292" alt="image" src="https://github.com/user-attachments/assets/f29247dd-ae59-4a08-94ef-5df8bee8fc4a" />
+
 - 3. spark-submit consumer.py
 ```bash
 spark-submit consumer.py
 ```
+<img width="792" height="129" alt="image" src="https://github.com/user-attachments/assets/759db55e-8fe9-402c-bb9d-5b28d2a628a8" />
+
 > note sau khi stream data vô thì nó lỗi dung lượng..data thì đã load được vô bronze r, nên ok, lỗi này fix sau (MN fix :))
 
 - 4. test da tao duoc iceberg 
