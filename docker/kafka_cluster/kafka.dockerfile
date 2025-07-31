@@ -26,4 +26,15 @@ RUN echo 'export PATH=$PATH:$KAFKA_HOME/config'>>~/.bashrc
 RUN echo 'KAFKA_CLUSTER_ID="Q_6ATv-PTJGaFkf27OW8Bg"' >> ~/.bashrc 
 
 
-CMD ["/bin/bash"]
+# Set environment for entrypoint script
+
+ENV KAFKA_CLUSTER_ID=Q_6ATv-PTJGaFkf27OW8Bg
+
+
+COPY config/kafka_cluster/entrypoint.sh entrypoint.sh
+USER root
+WORKDIR /home/kafka_user
+RUN chmod +x entrypoint.sh
+USER kafka_user
+WORKDIR /home/kafka_user
+ENTRYPOINT ["./entrypoint.sh"]
