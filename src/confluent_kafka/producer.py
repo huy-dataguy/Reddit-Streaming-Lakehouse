@@ -59,7 +59,7 @@ def producerRS_RC (url, topic, config):
                 oneCom = readOneLineJson(fRC)
             else:
                 print("waiting for luv...")
-            time.sleep(2)
+            time.sleep(10)
 
     # Block until the messages are sent.
     producer.flush()
