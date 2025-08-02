@@ -19,13 +19,13 @@ def delivery_report(err, msg):
 data = {
     "id": 1,
     "name": "huy",
-    "fan": "hihi"
+    "fan": "hallo"
 }
 
 try:
     while True:
         json_data = json.dumps(data)
-        producer.produce('iceberg-topic', value=json_data, callback=delivery_report)
+        producer.produce('testbitnami', value=json_data, callback=delivery_report)
         producer.flush()
         time.sleep(5)
 except KeyboardInterrupt:
