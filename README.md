@@ -76,7 +76,7 @@ docker exec -it confluent_kafka bash
 
 #### 6.1 producer data to kafka
 ```bash
-python python_kafka/producer.py
+python scripts/producer.py
 ```
 <img width="1148" height="247" alt="image" src="https://github.com/user-attachments/assets/7c3aa258-525d-4f47-afad-98e3c217c3b9" />
 
