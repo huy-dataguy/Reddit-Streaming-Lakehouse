@@ -59,14 +59,14 @@ def producerRS_RC (url, topic, config):
                 oneCom = readOneLineJson(fRC)
             else:
                 print("waiting for luv...")
-            time.sleep(10)
+            time.sleep(2)
 
     # Block until the messages are sent.
     producer.flush()
 
 
 if __name__ == '__main__':
-    rsrcURL = ["/home/confluent_kafka_user/python_kafka/data/RS_reddit.jsonl", "/home/confluent_kafka_user/python_kafka/data/RC_reddit.jsonl"]
+    rsrcURL = ["/home/confluent_kafka_user/python_kafka/data_clean/RS_reddit.jsonl", "/home/confluent_kafka_user/python_kafka/data_clean/RC_reddit.jsonl"]
     rsrcTopic = ["redditSubmission", "redditComment"]
 
     config = {
