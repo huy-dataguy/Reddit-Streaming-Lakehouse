@@ -69,6 +69,8 @@ services:
     hostname: client
     ports:
       - "4040:4040"
+    volumes:
+      - ../src/spark_submit:/home/sparkuser/spark_submit
 
     networks:
       - reddit_network

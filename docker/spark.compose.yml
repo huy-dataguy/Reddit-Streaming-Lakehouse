@@ -1,0 +1,63 @@
+services:
+
+  client:
+    build:
+      context: ../
+      dockerfile: docker/spark_on_YARN/client.dockerfile
+    image: client
+    container_name: client
+    hostname: client
+    ports:
+      - "4040:4040"
+    volumes:
+      - ../src/spark_submit:/home/sparkuser/spark_submit
+
+    networks:
+      - reddit_network
+    command: /bin/bash -c "service ssh start; tail -f /dev/null"
+  hadoopmaster:
+    build:
+      context: ../
+      dockerfile: docker/spark_on_YARN/master.dockerfile
+    ports:
+      - 9004:9004
+      - 9870:9870
+      - 8080:8080
+    image: master
+    hostname: hadoopmaster
+    networks:
+      - reddit_network
+    container_name: master
+
+    
+
+  hadoopworker1:
+    build:
+      context: ../
+      dockerfile: docker/spark_on_YARN/worker.dockerfile
+    image: hadoopworker1
+    hostname: hadoopworker1
+    networks:
+      - reddit_network
+    ports:
+      - 18042:8042
+    container_name: worker1
+    
+
+  hadoopworker2:
+    build:
+      context: ../
+      dockerfile: docker/spark_on_YARN/worker.dockerfile
+    image: hadoopworker2
+    hostname: hadoopworker2
+    networks:
+      - reddit_network
+    ports:
+      - 28042:8042
+    container_name: worker2
+
+networks:
+  reddit_network:
+    driver: bridge
+    name: reddit_network
+    external: true 

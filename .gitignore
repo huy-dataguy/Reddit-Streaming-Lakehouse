@@ -214,3 +214,9 @@ config/kafka2/
 config/kafka3/
 data/
 data-minio/
+RS_reddit.jsonl
+RC_reddit.jsonl
+RC_reddit_raw.jsonl
+RS_reddit_raw.jsonl
+data_raw/
+Tips.md

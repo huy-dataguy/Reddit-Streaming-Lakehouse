@@ -9,7 +9,6 @@ services:
     networks:
       - reddit_network
     volumes:
-      # - ../config/kafka1:/home/kafka_user/kafka
       - ../config/kafka_cluster/1server.properties:/home/kafka_user/kafka/config/kraft/server.properties
       - kraft-combined-logs1:/home/kafka_user/kafka/kraft-combined-logs 
     ports:
@@ -27,11 +26,9 @@ services:
     image: kafka2
     container_name: kafka2
     volumes:
-      # - ../config/kafka2:/home/kafka_user/kafka
       - ../config/kafka_cluster/2server.properties:/home/kafka_user/kafka/config/kraft/server.properties
       - kraft-combined-logs2:/home/kafka_user/kafka/kraft-combined-logs
     command: tail -F anything
-
 
 
   kafka3:
@@ -44,7 +41,6 @@ services:
     container_name: kafka3
     image: kafka3
     volumes:
-      # - ../config/kafka3:/home/kafka_user/kafka
       - ../config/kafka_cluster/3server.properties:/home/kafka_user/kafka/config/kraft/server.properties
       - kraft-combined-logs3:/home/kafka_user/kafka/kraft-combined-logs
     command: tail -F anything
