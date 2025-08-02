@@ -57,7 +57,8 @@ services:
     image: confluent_kafka
     container_name: confluent_kafka
     volumes:
-      - ../src/confluent_kafka:/home/confluent_kafka_user/python_kafka
+      - ../src/confluent_kafka:/home/confluent_kafka_user/scripts
+      - ../data:/home/confluent_kafka_user/data
     command: tail -F anything
 
 
