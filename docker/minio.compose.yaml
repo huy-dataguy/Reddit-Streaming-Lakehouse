@@ -12,10 +12,22 @@ services:
       - reddit_network
     user: root 
     volumes:
-      - minio1:/bitnami/minio/data
+      - minio1_data:/bitnami/minio/data
+      - minio1_certs:/certs
+
+
+  minio_client:
+    image: bitnami/minio-client:latest
+    depends_on:
+      - minio1
+    entrypoint: >
+      /bin/sh -c "sleep 10 && mc alias set minio http://minio1:9000 minio mypassword && mc mb minio/lakehouse && mc mb minio/checkpoint && tail -F anything"
+    networks:
+      - reddit_network
 
 volumes:
-  minio1:
+  minio1_data:
+  minio1_certs:
 
 networks:
   reddit_network:
