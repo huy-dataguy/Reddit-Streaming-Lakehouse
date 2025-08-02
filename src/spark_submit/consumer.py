@@ -9,7 +9,7 @@ spark = (SparkSession.builder
     .config("spark.sql.catalog.spark_catalog", "org.apache.iceberg.spark.SparkSessionCatalog")
     .config("spark.sql.catalog.spark_catalog.type", "hive")
     .config("spark.sql.catalog.spark_catalog.uri", "thrift://hive-metastore:9083")
-    .config("spark.sql.catalog.spark_catalog.warehouse", "s3a://warehouse/iceberg")
+    .config("spark.sql.catalog.spark_catalog.warehouse", "s3a://checkpoint/")
     .config("spark.hadoop.fs.s3a.endpoint", "http://minio1:9000")
     .config("spark.hadoop.fs.s3a.access.key", "minio")
     .config("spark.hadoop.fs.s3a.secret.key", "mypassword")
@@ -27,7 +27,7 @@ schema = StructType() \
 df_kafka = (spark.readStream
     .format("kafka")
     .option("kafka.bootstrap.servers", "kafka1:9092")
-    .option("subscribe", "iceberg-topic")
+    .option("subscribe", "testbitnami")
     .option("startingOffsets", "earliest")
     .load())
 
@@ -39,7 +39,7 @@ df_parsed = (df_kafka
 query = (df_parsed.writeStream
     .format("iceberg")
     .outputMode("append")
-    .option("checkpointLocation", "s3a://warehouse/iceberg/bronze/checkpoints/iceberg_topic/")
-    .toTable("spark_catalog.bronze.iceberg_topic"))
+    .option("checkpointLocation", "s3a://checkpoint/testStream/testtb/")
+    .toTable("spark_catalog.testbitnami.testtb"))
 
 query.awaitTermination()
