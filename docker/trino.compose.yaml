@@ -1,37 +1,45 @@
-version: '3.8'
 
 services:
   trino-coordinator:
+    build:
+      context: ./trino
+      dockerfile: trino.dockerfile
     image: trino-with-s3a
     container_name: trino-coordinator
     hostname: trino-coordinator
     ports:
       - "8081:8080"
     volumes:
-      - ./trino/coordinator/etc:/etc/trino
+      - ../config/trino/coordinator/etc:/etc/trino
     networks:
-      - data_network
+      - reddit_network
 
 
   trino-worker-1:
+    build:
+      context: ./trino
+      dockerfile: trino.dockerfile
     image: trinodb/trino:423
     container_name: trino-worker-1
     hostname: trino-worker-1
     volumes:
-      - ./trino/worker1/etc:/etc/trino
+      - ../config/trino/worker1/etc:/etc/trino
     networks:
-      - data_network
+      - reddit_network
 
   trino-worker-2:
+    build:
+      context: ./trino
+      dockerfile: trino.dockerfile
     image: trinodb/trino:423
     container_name: trino-worker-2
     hostname: trino-worker-2
     volumes:
-      - ./trino/worker2/etc:/etc/trino
+      - ../config/trino/worker2/etc:/etc/trino
     networks:
-      - data_network
+      - reddit_network
 
 
 networks:
-  data_network:
+  reddit_network:
     external: true
