@@ -39,4 +39,5 @@ WORKDIR /home/kafka_user
 RUN chmod +x entrypoint.sh
 
 
+
 ENTRYPOINT ["./entrypoint.sh"]
