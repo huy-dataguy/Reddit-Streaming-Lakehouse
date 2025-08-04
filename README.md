@@ -28,11 +28,6 @@ docker compose -f spark.compose.yml up -d
 docker compose -f minio.compose.yaml up -d
 
 ```
-## 3.1 create bucket
-```bash in client
-./create_bucket.sh
-```
-<img width="1114" height="190" alt="image" src="https://github.com/user-attachments/assets/b1b4dc91-f294-4a36-9a60-7206bdbd7455" />
 
 ## 4. build - run hive metastore
 
