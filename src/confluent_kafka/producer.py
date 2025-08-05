@@ -66,7 +66,7 @@ def producerRS_RC (url, topic, config):
 
 
 if __name__ == '__main__':
-    rsrcURL = ["/home/confluent_kafka/python_kafka/data/RS_reddit.jsonl", "/home/confluent_kafka/python_kafka/data/RC_reddit.jsonl"]
+    rsrcURL = ["/home/confluent_kafka_user/data/RS_reddit.jsonl", "/home/confluent_kafka_user/data/RC_reddit.jsonl"]
     rsrcTopic = ["redditSubmission", "redditComment"]
 
     config = {

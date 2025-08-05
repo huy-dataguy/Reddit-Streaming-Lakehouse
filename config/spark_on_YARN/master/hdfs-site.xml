@@ -9,10 +9,7 @@
     </property>
     <property>
         <name>dfs.namenode.name.dir</name>
-        <value>/home/sparkuser/hadoop/dfs/namenode</value>
+        <value>/home/sparkuser/hadoop/hdfs/namenode</value>
     </property>
-    <property>
-        <name>dfs.datanode.data.dir</name>
-        <value>/home/sparkuser/hadoop/dfs/datanode</value>
-    </property>
+
 </configuration>

@@ -59,7 +59,23 @@ services:
   #     - ../src/confluent_kafka:/home/confluent_kafka_user/python_kafka
   #   command: tail -F anything
 
-  sparkmaster:
+
+  client:
+    build:
+      context: ../
+      dockerfile: docker/spark_on_YARN/client.dockerfile
+    image: client
+    container_name: client
+    hostname: client
+    ports:
+      - "4040:4040"
+    volumes:
+      - ../src/spark_submit:/home/sparkuser/spark_submit
+
+    networks:
+      - reddit_network
+    command: /bin/bash -c "service ssh start; tail -f /dev/null"
+  hadoopmaster:
     build:
       context: ../
       dockerfile: docker/spark_on_YARN/master.dockerfile
@@ -67,73 +83,77 @@ services:
       - 9004:9004
       - 9870:9870
       - 8080:8080
-    image: sparkmaster
-    hostname: sparkmaster
+    image: master
+    hostname: hadoopmaster
     networks:
       - reddit_network
+    container_name: master
+
     
 
-  sparkworker1:
+  hadoopworker1:
     build:
       context: ../
       dockerfile: docker/spark_on_YARN/worker.dockerfile
-    image: sparkworker1
-    hostname: sparkworker1
+    image: hadoopworker1
+    hostname: hadoopworker1
     networks:
       - reddit_network
     ports:
       - 18042:8042
+    container_name: worker1
     
 
-  sparkworker2:
+  hadoopworker2:
     build:
       context: ../
       dockerfile: docker/spark_on_YARN/worker.dockerfile
-    image: sparkworker2
-    hostname: sparkworker2
+    image: hadoopworker2
+    hostname: hadoopworker2
     networks:
       - reddit_network
     ports:
       - 28042:8042
+    container_name: worker2
 
 
-  minio1:
-    image: minio/minio:latest
-    container_name: minio1
-    ports:
-      - "9001:9000"   
-      - "9005:9005"   
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: miniopasswd
-    # volumes:
-    #   - ./data-minio/minio1-data:/data
-    command: server http://minio1/data http://minio2/data --console-address ":9005"
-    networks:
-      - reddit_network
+  # minio1:
+  #   image: minio/minio:latest
+  #   container_name: minio1
+  #   ports:
+  #     - "9001:9000"   
+  #     - "9005:9005"   
+  #   environment:
+  #     MINIO_ROOT_USER: minio
+  #     MINIO_ROOT_PASSWORD: mypassword
+  #   # volumes:
+  #   #   - ./data-minio/minio1-data:/data
+  #   command: server http://minio1/data http://minio2/data --console-address ":9005"
+  #   networks:
+  #     - reddit_network
 
-  minio2:
-    image: minio/minio:latest
-    container_name: minio2
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: miniopasswd
-    # volumes:
-    #   - ./data-minio/minio2-data:/data
-    command: server http://minio1/data http://minio2/data
-    networks:
-      - reddit_network
+  # minio2:
+  #   image: minio/minio:latest
+  #   container_name: minio2
+  #   environment:
+  #     MINIO_ROOT_USER: minio
+  #     MINIO_ROOT_PASSWORD: mypassword
+  #   # volumes:
+  #   #   - ./data-minio/minio2-data:/data
+  #   command: server http://minio1/data http://minio2/data
+  #   networks:
+  #     - reddit_network
 
-  awscli:
-    image: amazon/aws-cli
-    container_name: awscli
-    hostname: awscli
-    environment:
-      AWS_ACCESS_KEY_ID: awscli
-      AWS_SECRET_ACCESS_KEY: awscli
-    entrypoint: ["tail", "-f", "/dev/null"]
-    networks:
-      - reddit_network
+  # awscli:
+  #   image: amazon/aws-cli
+  #   container_name: awscli
+  #   hostname: awscli
+  #   environment:
+  #     AWS_ACCESS_KEY_ID: awscli
+  #     AWS_SECRET_ACCESS_KEY: awscli
+  #   entrypoint: ["tail", "-f", "/dev/null"]
+  #   networks:
+  #     - reddit_network
     
 networks:
   reddit_network:

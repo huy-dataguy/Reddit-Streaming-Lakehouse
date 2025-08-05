@@ -12,7 +12,7 @@ services:
       - ./data-minio/minio1-data:/data
     command: server http://minio1/data http://minio2/data http://minio3/data --console-address ":9005"
     networks:
-      - data_network
+      - reddit_network
 
   minio2:
     image: minio/minio:latest
@@ -26,7 +26,7 @@ services:
       - ./data-minio/minio2-data:/data
     command: server http://minio1/data http://minio2/data http://minio3/data
     networks:
-      - data_network
+      - reddit_network
 
   minio3:
     image: minio/minio:latest
@@ -40,7 +40,7 @@ services:
       - ./data-minio/minio3-data:/data
     command: server http://minio1/data http://minio2/data http://minio3/data
     networks:
-      - data_network
+      - reddit_network
 
   awscli:
     image: amazon/aws-cli
@@ -55,9 +55,11 @@ services:
       AWS_SECRET_ACCESS_KEY: mypassword
     entrypoint: ["tail", "-f", "/dev/null"]
     networks:
-      - data_network
+      - reddit_network
 
 
 networks:
-  data_network:
-    external: true
+  reddit_network:
+    driver: bridge
+    name: reddit_network
+    external: true 

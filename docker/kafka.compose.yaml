@@ -1,0 +1,74 @@
+services:
+  kafka1:
+    build:
+      context: ../
+      dockerfile: docker/kafka_cluster/kafka.dockerfile
+    hostname: kafka1
+    image: kafka1
+    container_name: kafka1
+    networks:
+      - reddit_network
+    volumes:
+      - ../config/kafka_cluster/1server.properties:/home/kafka_user/kafka/config/kraft/server.properties
+      - kraft-combined-logs1:/home/kafka_user/kafka/kraft-combined-logs 
+    ports:
+      - 9092:9092
+    command: tail -F anything
+
+
+  kafka2:
+    build:
+      context: ../
+      dockerfile: docker/kafka_cluster/kafka.dockerfile
+    hostname: kafka2
+    networks:
+      - reddit_network
+    image: kafka2
+    container_name: kafka2
+    volumes:
+      - ../config/kafka_cluster/2server.properties:/home/kafka_user/kafka/config/kraft/server.properties
+      - kraft-combined-logs2:/home/kafka_user/kafka/kraft-combined-logs
+    command: tail -F anything
+
+
+  kafka3:
+    build:
+      context: ../
+      dockerfile: docker/kafka_cluster/kafka.dockerfile
+    hostname: kafka3
+    networks:
+      - reddit_network
+    container_name: kafka3
+    image: kafka3
+    volumes:
+      - ../config/kafka_cluster/3server.properties:/home/kafka_user/kafka/config/kraft/server.properties
+      - kraft-combined-logs3:/home/kafka_user/kafka/kraft-combined-logs
+    command: tail -F anything
+
+
+
+  confluent_kafka:
+    build:
+      context: ./kafka_cluster
+      dockerfile: confluent_kafka.dockerfile
+    hostname: confluent_kafka
+    networks:
+      - reddit_network
+    image: confluent_kafka
+    container_name: confluent_kafka
+    volumes:
+      - ../src/confluent_kafka:/home/confluent_kafka_user/scripts
+      - ../data:/home/confluent_kafka_user/data
+    command: tail -F anything
+
+
+networks:
+  reddit_network:
+    driver: bridge
+    name: reddit_network
+    external: true 
+
+volumes:
+  kraft-combined-logs1:
+  kraft-combined-logs2:
+  kraft-combined-logs3:

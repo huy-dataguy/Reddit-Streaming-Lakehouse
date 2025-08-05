@@ -1,18 +1,11 @@
 config kafka, spark, trino, superset......
 
 
-> **NOTE** 
-
-wget https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.9.2/iceberg-spark-runtime-3.5_2.12-1.9.2.jar -O iceberg.jar
-
-
-# Insert to .bashrc
-KAFKA_CLUSTER_ID="Q_6ATv-PTJGaFkf27OW8Bg"
 
 # delete log 
 rm -rf /kafka/kraft-combined-logs
 
-# generate the log storage
+# format generate the log storage
 ./kafka/bin/kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c ./kafka/config/kraft/server.properties
 
 # start on all machine cluster
@@ -43,17 +36,6 @@ kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --list
 reddit_submission
 ## detail group consumer
 kafka-consumer-groups.sh --bootstrap-server kafka1:9092   --describe --group redditSubmission
-
-
-
-
-
-
-
-
-
-# docker cp docker-zookeeper-1:/home/zookeeper-u/zookeeper ../config/zookeeper
-# docker cp docker-kafka-1:/home/kafka-u/kafka ../config/kafka
 
 #start kafka connect zookeep run in the background, CANT use CLI
 # ./kafka/bin/kafka-server-start.sh ./kafka/config/server.properties
