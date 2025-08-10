@@ -92,6 +92,9 @@ docker exec -it client bash
 => spark-shell
 ```bash
 spark.sql("create database spark_catalog.bronze")
+spark.sql("create database spark_catalog.silver")
+spark.sql("create database spark_catalog.gold")
+
 ```
 <img width="626" height="104" alt="image" src="https://github.com/user-attachments/assets/55f21c7b-3430-4165-a032-fda0cec3c08c" />
 
@@ -104,6 +107,12 @@ spark-submit spark_submit/rsBronze.py
 spark-submit spark_submit/rcBronze.py
 ```
 <img width="792" height="129" alt="image" src="https://github.com/user-attachments/assets/759db55e-8fe9-402c-bb9d-5b28d2a628a8" />
+
+- 4. transform silver
+  - a. chuyen folder transformer thanh file transformer.zip
+```bash
+  spark-submit --py-files transformer.zip main.py
+```
 
      
 ```bash
