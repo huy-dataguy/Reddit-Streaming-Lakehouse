@@ -11,6 +11,7 @@ services:
       - "4040:4040"
     volumes:
       - ../src/spark_submit:/home/sparkuser/spark_submit
+      - ../src/transformer:/home/sparkuser/transformer
 
     networks:
       - reddit_network

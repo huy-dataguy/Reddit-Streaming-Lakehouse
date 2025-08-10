@@ -108,6 +108,12 @@ spark-submit spark_submit/rcBronze.py
 ```
 <img width="792" height="129" alt="image" src="https://github.com/user-attachments/assets/759db55e-8fe9-402c-bb9d-5b28d2a628a8" />
 
+- 4. transform silver
+  - a. chuyen folder transformer thanh file transformer.zip
+```bash
+  spark-submit --py-files transformer.zip main.py
+```
+
      
 ```bash
 spark-shell \
