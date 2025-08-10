@@ -92,6 +92,9 @@ docker exec -it client bash
 => spark-shell
 ```bash
 spark.sql("create database spark_catalog.bronze")
+spark.sql("create database spark_catalog.silver")
+spark.sql("create database spark_catalog.gold")
+
 ```
 <img width="626" height="104" alt="image" src="https://github.com/user-attachments/assets/55f21c7b-3430-4165-a032-fda0cec3c08c" />
 
