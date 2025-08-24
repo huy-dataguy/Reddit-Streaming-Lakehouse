@@ -24,8 +24,8 @@ spark = (SparkSession.builder
         .getOrCreate())
 
 
-dfSub = BaseTransformer(spark).readData("spark_catalog.bronze.reddit_submission")
-dfCmt = BaseTransformer(spark).readData("spark_catalog.bronze.reddit_comment")
+dfSub = BaseTransformer(spark).readData("spark_catalog.silver.reddit_submission")
+dfCmt = BaseTransformer(spark).readData("spark_catalog.silver.reddit_comment")
 
 gold=GoldTransformer(spark, dfSub, dfCmt)
 
