@@ -3,7 +3,8 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
-from transformer.submissionTransfomer import SubmissionTransformer
+from transformer.silverSubTransfomer import SubmissionTransformer
+from transformer.silverCmtTransformer import CommentTransformer
 
 spark = (SparkSession.builder
         .appName("SilverTransformer")
@@ -24,3 +25,7 @@ spark = (SparkSession.builder
 
 submissionTransformer = SubmissionTransformer(spark)
 submissionTransformer.transform("spark_catalog.bronze.reddit_submission", "spark_catalog.silver.reddit_submission", checkpointPath="s3a://checkpoint/lakehouse/silver/reddit_submission/")
+
+commentTransformer = CommentTransformer(spark)
+commentTransformer.transform("spark_catalog.bronze.reddit_comment", "spark_catalog.silver.reddit_comment", checkpointPath="s3a://checkpoint/lakehouse/silver/reddit_comment/")
+

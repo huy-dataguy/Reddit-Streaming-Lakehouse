@@ -51,18 +51,15 @@ docker compose -f kafka.compose.yaml up -d
 docker exec -it kafka1 bash
 ```
 ```bash
-kafka-topics.sh --create --topic testbitnami --bootstrap-server kafka1:9092 --replication-factor 2
-kafka-topics.sh --create --topic redditSubmission --bootstrap-server kafka1:9092 --replication-factor 2
-kafka-topics.sh --create --topic redditComment --bootstrap-server kafka1:9092 --replication-factor 2
-```
-```bash
-kafka-console-consumer.sh --topic redditSubmission --from-beginning --bootstrap-server kafka1:9092
-```
-
-```bash
 kafka-metadata-quorum.sh --bootstrap-controller kafka1:9093 describe --status
 ```
 <img width="1160" height="229" alt="image" src="https://github.com/user-attachments/assets/b15217dc-4e5e-4e87-b500-b509526e5045" />
+
+
+```bash
+kafka-topics.sh --create --topic redditSubmission --bootstrap-server kafka1:9092 --replication-factor 2
+kafka-topics.sh --create --topic redditComment --bootstrap-server kafka1:9092 --replication-factor 2
+```
 
 
 #### 2. list topic
@@ -70,12 +67,19 @@ kafka-metadata-quorum.sh --bootstrap-controller kafka1:9093 describe --status
   kafka-topics.sh --bootstrap-server kafka1:9092 --list
 ```
 
+```bash
+kafka-console-consumer.sh --topic redditSubmission --from-beginning --bootstrap-server kafka1:9092
+```
+
+
 ## 6. Stream data kafka to iceberg
 ```bash
 docker exec -it confluent_kafka bash
 ```
 
 #### 6.1 producer data to kafka
+
+*****xem data gửi vô topic, chỉ nạp vô 10-20 post, comment thôi, model trả về chậm, gửi data nhiều chờ mãn kiếp***
 ```bash
 python scripts/producer.py
 ```
@@ -99,21 +103,29 @@ spark.sql("create database spark_catalog.gold")
 <img width="626" height="104" alt="image" src="https://github.com/user-attachments/assets/55f21c7b-3430-4165-a032-fda0cec3c08c" />
 
 - 3. stream kafka
-```bash
-spark-submit spark_submit/rsBronze.py
-```
+
+nen fold
+
+zip -r transformer.zip transformer/
+
+
 
 ```bash
-spark-submit spark_submit/rcBronze.py
+spark-submit spark_submit/mainBronze.py
 ```
 <img width="792" height="129" alt="image" src="https://github.com/user-attachments/assets/759db55e-8fe9-402c-bb9d-5b28d2a628a8" />
 
 - 4. transform silver
   - a. chuyen folder transformer thanh file transformer.zip
 ```bash
-  spark-submit --py-files transformer.zip main.py
+  spark-submit --py-files transformer.zip mainSilver.py
+```
+- 5 transform gold
+```bash
+  spark-submit --py-files transformer.zip mainGold.py
 ```
 
+##Check xem data bronze, silver, gold co ok chua, co du chua
      
 ```bash
 spark-shell \
@@ -131,6 +143,15 @@ spark.read.table("spark_catalog.bronze.reddit_submission").show()
 ```
 
 
+zip -r transformer.zip transformer/
 
 
 mc rm -r --force minio1/checkpoint/bronze/
+
+sudo apt-get install -y python3-pip
+RUN pip3 install --break-system-packages gradio_client
+
+
+pip3 install gradio_client -t ./libs
+
+zip -r libs.zip ./libs
