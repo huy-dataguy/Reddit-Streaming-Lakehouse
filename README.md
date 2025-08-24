@@ -111,8 +111,13 @@ spark-submit spark_submit/rcBronze.py
 - 4. transform silver
   - a. chuyen folder transformer thanh file transformer.zip
 ```bash
-  spark-submit --py-files transformer.zip main.py
+  spark-submit --py-files transformer.zip mainSilver.py
 ```
+
+```bash
+  spark-submit --py-files transformer.zip mainGold.py
+```
+zip -r transformer.zip transformer/
 
      
 ```bash
@@ -131,6 +136,7 @@ spark.read.table("spark_catalog.bronze.reddit_submission").show()
 ```
 
 
+zip -r transformer.zip transformer/
 
 
 mc rm -r --force minio1/checkpoint/bronze/
