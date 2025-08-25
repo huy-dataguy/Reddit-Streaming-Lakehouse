@@ -46,6 +46,18 @@ services:
     command: tail -F anything
 
 
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - 8085:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kraft-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092
+    networks:
+      - reddit_network
+
+
 
   confluent_kafka:
     build:
