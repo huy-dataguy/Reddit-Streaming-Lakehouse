@@ -7,7 +7,7 @@ RUN python3 -m venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install confluent-kafka
+RUN pip install confluent-kafka pymongo[srv]==3.12 python-dotenv certifi
 
 RUN useradd -m confluent_kafka_user && \
     echo "confluent_kafka_user:kafka" | chpasswd
