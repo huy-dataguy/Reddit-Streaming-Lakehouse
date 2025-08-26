@@ -10,7 +10,7 @@ services:
     networks:
       - reddit_network
     environment:
-      - SUPERSET_SECRET_KEY=supsersetkey 
+      - SUPERSET_SECRET_KEY=your_secure_secret_key 
       - SUPERSET_FEATURE_EMBEDDED_SUPERSET=true
 
 volumes:
