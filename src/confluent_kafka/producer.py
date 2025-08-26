@@ -117,7 +117,7 @@ def producerRS_RC(postColl, cmtColl, rsrcTopic, config, checkpointColl, mongoDB)
 
 
 if __name__ == '__main__':
-    rsrcTopic = ["Submission", "Comment"]
+    rsrcTopic = ["redditSubmission", "redditComment"]
 
     config = {
         "bootstrap.servers": "kafka1:9092",
