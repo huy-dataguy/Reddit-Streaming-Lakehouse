@@ -1,5 +1,6 @@
 #!/bin/bash
 
+docker exec -it superset superset db upgrade
 
 # create an admin userr
 docker exec -it superset superset fab create-admin \
