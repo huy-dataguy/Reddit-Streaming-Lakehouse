@@ -21,9 +21,9 @@ class SubmissionTransformer(BaseTransformer):
         return df.withColumn("matchPercent", matchPercent).withColumn(newCol, isPostSpam)   
          
     def transform(self, pathIn, pathOut, format="iceberg", checkpointPath=None, mode="append", streaming=False):
-        df = self.readData(pathIn, format)
+        df = self.readData(pathIn, format, streaming=streaming)
         df = self.convertTimestamp(df)
         df = self.markAuthorDeleted(df) 
         df = self.markBodyRemoved(df)
         df = self.markSpamPost(df)
-        self.writeData(df=df, pathOut=pathOut)
+        self.writeData(df=df, pathOut=pathOut, checkpointPath=checkpointPath, streaming=streaming)
