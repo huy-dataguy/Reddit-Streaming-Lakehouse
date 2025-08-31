@@ -9,21 +9,38 @@ class BaseTransformer:
     def readData(self, pathIn, format="iceberg", streaming=False):
         if streaming:
             return (self.spark
-                        .readStream
+                        .readStream # add trigger, when -- 1 batch interval
                         .format(format)
                         .load(pathIn))
         else:
             return self.spark.table(pathIn)
+        
+    def readSnapshot(self, pathIn, snapshots):
+        #create dict
+        #**options unpack dict to all key arg
+        startSnap = snapshots[0]
+        endSnap=snapshots[1]
+        options = {}
+        if startSnap is not None:
+            options["start-snapshot-id"] = str(startSnap)
+        if endSnap is not None:
+            options["end-snapshot-id"] = str(endSnap)
+        return (self.spark.read
+                    .format("iceberg")
+                    .options(**options)
+                    .load(pathIn))
+
 
     def writeData(self, df, pathOut, format="iceberg", checkpointPath=None, mode="append", streaming=False):
         if streaming:
-            # (df.writeStream
-            query = (df.writeStream
+            (df.writeStream
+            # query = (df.writeStream
                 .format(format)
                 .outputMode(mode)
+                .trigger(processingTime="5 seconds")
                 .option("checkpointLocation", checkpointPath)
                 .toTable(pathOut))
-            query.awaitTermination()  
+            # query.awaitTermination()  
     
         else:
             (df.write
