@@ -44,18 +44,23 @@ docker compose -f kafka.compose.yaml build
 ```bash
 docker compose -f kafka.compose.yaml up -d
 ```
-
+## 6 grafana  thich thi tao
+```bash
+docker compose -f grafana.compose.yaml up -d
+```
 #### 1. check - show info cluster 
 
 ```bash
 docker exec -it kafka1 bash
 ```
+
+khong can test, chac chan co r
 ```bash
 kafka-metadata-quorum.sh --bootstrap-controller kafka1:9093 describe --status
 ```
 <img width="1160" height="229" alt="image" src="https://github.com/user-attachments/assets/b15217dc-4e5e-4e87-b500-b509526e5045" />
 
-
+---Co the mo giao dien kafka UI de tao, khoi phai vo container met
 ```bash
 kafka-topics.sh --create --topic redditSubmission --bootstrap-server kafka1:9092 --replication-factor 2
 kafka-topics.sh --create --topic redditComment --bootstrap-server kafka1:9092 --replication-factor 2
@@ -80,8 +85,10 @@ docker exec -it confluent_kafka bash
 #### 6.1 producer data to kafka
 
 *****xem data gửi vô topic, chỉ nạp vô 10-20 post, comment thôi, model trả về chậm, gửi data nhiều chờ mãn kiếp***
+cd scripts
+
 ```bash
-python scripts/producer.py
+python producer.py
 ```
 <img width="1148" height="247" alt="image" src="https://github.com/user-attachments/assets/7c3aa258-525d-4f47-afad-98e3c217c3b9" />
 
@@ -106,7 +113,8 @@ spark.sql("create database spark_catalog.gold")
 
 nen fold
 
-zip -r transformer.zip transformer/
+**zip -r transformer.zip transformer/ => move transformer.zip vao folder spark_submit**
+\
 
 
 
@@ -118,7 +126,10 @@ spark-submit spark_submit/mainBronze.py
 - 4. transform silver
   - a. chuyen folder transformer thanh file transformer.zip
 ```bash
-  spark-submit --py-files transformer.zip mainSilver.py
+  spark-submit --py-files transformer.zip mainRsSilver.py
+```
+```bash
+  spark-submit --py-files transformer.zip mainRcSilver.py
 ```
 - 5 transform gold
 ```bash
@@ -155,3 +166,17 @@ RUN pip3 install --break-system-packages gradio_client
 pip3 install gradio_client -t ./libs
 
 zip -r libs.zip ./libs
+
+
+spark.jars.packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.4.4, \
+org.apache.hadoop:hadoop-aws:3.3.4, \
+org.apache.hadoop:hadoop-client-runtime:3.3.4, \
+org.apache.hadoop:hadoop-client-api:3.3.4, \
+software.amazon.awssdk:bundle:2.26.19, \
+org.apache.iceberg:iceberg-spark-runtime-3.4_2.13:1.4.0
+
+
+
+
+
+

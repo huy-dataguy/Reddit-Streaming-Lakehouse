@@ -23,91 +23,110 @@ spark = (SparkSession.builder
         .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
         .getOrCreate())
 
-#dfSub get new data from 2 snapshot ID - in the first get all new data from first snapshot
+querys=[]
+
 pathRS="spark_catalog.silver.reddit_submission"
-# snapshotsSub=getIdSnapshot(spark, pathRS)
-
-#### convert to readStream dont need to use read Snapshot start-end...........
-#******************
-# dfSubNew = BaseTransformer(spark).readSnapshot(pathRS, snapshotsSub)
-
 pathRC ="spark_catalog.silver.reddit_comment"
-# snapshotsCmt=getIdSnapshot(spark, pathRC)
-# dfCmtNew = BaseTransformer(spark).readSnapshot(pathRC, snapshotsCmt)
-
-dfSubNew = BaseTransformer(spark).readData(pathRS, streaming=True)
-dfCmtNew = BaseTransformer(spark).readData(pathRC, streaming=True)
-
-                                            
-gold=GoldTransformer(spark, dfSubNew, dfCmtNew)
-
-# func get lastest id snapshot
-# get existingDim time from snapshot
 pathDTime = "spark_catalog.gold.dimTime"
-# snapshotTime = getIdSnapshot(spark, pathDTime)
-# existDimTime = BaseTransformer(spark).readSnapshot(pathDTime, snapshotTime)
-
-existDimTime = BaseTransformer(spark).readData(pathDTime, streaming=True)
-dimTime = gold.createDimTime(existingDimTime=existDimTime) 
-gold.writeData(dimTime, pathDTime, checkpointPath="s3a://checkpoint/lakehouse/gold/dimTime/", streaming=True)
-
-# Get existing dimAuthor from snapshot for stream/batch processing
 pathDAuthor = "spark_catalog.gold.dimAuthor"
-# snapshotAuthor = getIdSnapshot(spark, pathDAuthor)
-# existDimAuthor = BaseTransformer(spark).readSnapshot(pathDAuthor, snapshotAuthor)
-existDimAuthor = BaseTransformer(spark).readData(pathDAuthor, streaming=True)
-
-dimAuthor = gold.createDimAuthor(existingAuthor=existDimAuthor)
-gold.writeData(dimAuthor, pathDAuthor, checkpointPath="s3a://checkpoint/lakehouse/gold/dimAuthor/", streaming=True)
-
-
-# Only create dimSentiment if it does not exist yet
 pathDSentiment = "spark_catalog.gold.dimSentiment"
-# snapshotSentiment = getIdSnapshot(spark, pathDSentiment)
-# existDimSentiment = BaseTransformer(spark).readSnapshot(pathDSentiment, snapshotSentiment)
+pathDSubreddit = "spark_catalog.gold.dimSubreddit"
+pathDPost = "spark_catalog.gold.dimPost"
+pathDComment = "spark_catalog.gold.dimComment"
+pathDPostType = "spark_catalog.gold.dimPostType"
+pathFPost="spark_catalog.gold.factPostActivity"
+pathFCmt="spark_catalog.gold.factCommentActivity"
 
-existDimSentiment = BaseTransformer(spark).readData(pathDSentiment)
-if existDimSentiment is None or existDimSentiment.rdd.isEmpty():
+
+gold = GoldTransformer(spark, pathRS, pathRC, True)
+                                            
+existDimTime =gold.readData(pathDTime, streaming=True)
+def processDimTime(batch_df, batch_id):
+        dimTime = gold.createDimTime(existingDimTime=batch_df) 
+        gold.writeData(dimTime, pathDTime)
+
+qDTime=gold.writeData(df=existDimTime, pathOut=pathDTime, checkpointPath="s3a://checkpoint/lakehouse/gold/dimTime/", streaming=True, batchFunc=processDimTime)
+querys.append(qDTime)
+
+existDimAuthor = gold.readData(pathDAuthor, streaming=True)
+def processDimAuthor(batch_df, batch_id):
+        dimTime = gold.createDimAuthor(existingAuthor=batch_df) 
+        gold.writeData(dimTime, pathDAuthor)
+
+qDAuthor=gold.writeData(df=existDimAuthor, pathOut=pathDAuthor, checkpointPath="s3a://checkpoint/lakehouse/gold/dimAuthor/", streaming=True, batchFunc=processDimAuthor)
+querys.append(qDAuthor)
+
+existDimSentiment = gold.readData(pathDSentiment)
+if existDimSentiment is None:
         dimSentiment = gold.createDimSentiment()
-        gold.writeData(dimSentiment, pathDSentiment, checkpointPath="s3a://checkpoint/lakehouse/gold/dimSentiment/")
+        gold.writeData(dimSentiment, pathDSentiment)
 else:
         dimSentiment=existDimSentiment
 
-# Get existing dimSubreddit from snapshot for stream/batch processing
-pathDSubreddit = "spark_catalog.gold.dimSubreddit"
-# snapshotSubreddit = getIdSnapshot(spark, pathDSubreddit)
-# existDimSubreddit = BaseTransformer(spark).readSnapshot(pathDSubreddit, snapshotSubreddit)
-existDimSubreddit = BaseTransformer(spark).readData(pathDSubreddit, streaming=True)
+existDimSubreddit = gold.readData(pathDSubreddit, streaming=True)
+def processDimSubreddit(batch_df, batch_id):
+        dimSubreddit = gold.createDimSubreddit(existingSubreddit=batch_df)
+        gold.writeData(dimSubreddit, pathDSubreddit)
+qDSubreddit=gold.writeData(existDimSubreddit, pathOut=pathDSubreddit,checkpointPath="s3a://checkpoint/lakehouse/gold/dimSubreddit/", streaming=True, batchFunc=processDimSubreddit)
+querys.append(qDSubreddit)
 
-dimSubreddit = gold.createDimSubreddit(existingSubreddit=existDimSubreddit)
-gold.writeData(dimSubreddit, pathDSubreddit, checkpointPath="s3a://checkpoint/lakehouse/gold/dimSubreddit/", streaming=True)
-
-
-pathDPostType = "spark_catalog.gold.dimPostType"
-# snapshotPostType = getIdSnapshot(spark, pathDPostType)
-# existDimPostType = BaseTransformer(spark).readSnapshot(pathDPostType, snapshotPostType)
-existDimPostType =BaseTransformer(spark).readData(pathDPostType, streaming=True)
-dimPostType = gold.createDimPostType(existingPostType=existDimPostType)
-gold.writeData(dimPostType, pathDPostType, checkpointPath="s3a://checkpoint/lakehouse/gold/dimPostType", streaming=True)
+existDimPostType =gold.readData(pathDPostType, streaming=True)
+def processDPostType(batch_df, batch_id):
+        dimPostType = gold.createDimPostType(existingPostType=batch_df)
+        gold.writeData(dimPostType, pathDPostType)
+qDPostType=gold.writeData(existDimPostType, pathDPostType, checkpointPath="s3a://checkpoint/lakehouse/gold/dimPostType", streaming=True, batchFunc=processDPostType)
+querys.append(qDPostType)
 
 
-dfSub = BaseTransformer(spark).readData(pathRS)
-pathDPost = "spark_catalog.gold.dimPost"
-dimPost = gold.createDimPost(dfSub)
-gold.writeData(dimPost, pathDPost, mode="overwrite" ,checkpointPath="s3a://checkpoint/lakehouse/gold/dimPost/")
+dfSub=gold.readData(pathRS)
+dfCmtNew=gold.dfCmtNew
+def processDPost(batch_df, batch_id):
+        dimPost = gold.createDimPost(dfOldSub=batch_df)
+        gold.writeData(dimPost, pathRS, mode="override")
+
+qDPost=gold.writeData(df=dfCmtNew, pathOut=pathRC,checkpointPath="s3a://checkpoint/lakehouse/gold/dimPost/", streaming=True, batchFunc=processDPost)
+querys.append(qDPost)
+
+existDimComment=gold.readData(pathDComment, streaming=True)
+def processDCmt(batch_df, batch_id):
+        dimComment = gold.createDimComment(existingCmt=batch_df)
+        gold.writeData(dimComment,pathDComment)
+qDCmt=gold.writeData(existDimComment, pathDComment, checkpointPath="s3a://checkpoint/lakehouse/gold/dimComment/", streaming=True, batchFunc=processDCmt)
+querys.append(qDCmt)
+
+def processFactPostActivity(batch_df, batch_id):
+        dTime = gold.readData(pathDTime)
+        dAuthor = gold.readData(pathDAuthor)
+        dSubreddit = gold.readData(pathDSubreddit)
+        dPostType = gold.readData(pathDPostType)
+        dSentiment = gold.readData(pathDSentiment)
+
+        factPost = gold.createFactPostActivity(dTime, dAuthor, dSubreddit, dPostType, dSentiment)
+        factPost=gold.writeData(factPost,pathOut= pathFPost)
+
+dfSubNew=gold.dfSubNew
+qFPost =gold.writeData(dfSubNew, pathOut= pathFPost, checkpointPath="s3a://checkpoint/lakehouse/gold/factPostActivity/", streaming=True, batchFunc=processFactPostActivity)
+querys.append(pathFPost)
 
 
-pathDComment = "spark_catalog.gold.dimComment"
-# snapshotComment = getIdSnapshot(spark, pathDComment)
-# existDimComment = BaseTransformer(spark).readSnapshot(pathDComment, snapshotComment)
-existDimComment=BaseTransformer(spark).readData(pathDComment, streaming=True)
-dimComment = gold.createDimComment(existingCmt=existDimComment)
-gold.writeData(dimComment,pathDComment, checkpointPath="s3a://checkpoint/lakehouse/gold/dimComment/", streaming=True)
+def processFactCommentActivity(batch_df, batch_id):
+        dTime = gold.readData(pathDTime)
+        dAuthor = gold.readData(pathDAuthor)
+        dSubreddit = gold.readData(pathDSubreddit)
+        dPost= gold.readData(pathDPost)
+        dSentiment = gold.readData(pathDSentiment)
+
+        factComment = gold.createFactCommentActivity(dTime, dAuthor, dSubreddit, dPost, dSentiment)
+        factComment=gold.writeData(factComment, pathOut=pathFCmt)
 
 
-factPostActi = gold.createFactPostActivity(dimTime, dimAuthor, dimSubreddit, dimPostType, dimSentiment)
-factCmtActi = gold. createFactCommentActivity(dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment)
+qFCmt =gold.writeData(dfCmtNew, pathOut= pathFCmt, checkpointPath="s3a://checkpoint/lakehouse/gold/factCommentActivity/", streaming=True, batchFunc=processFactCommentActivity)
+querys.append(pathFCmt)
 
-gold.writeData(factPostActi, "spark_catalog.gold.factPostActivity", checkpointPath="s3a://checkpoint/lakehouse/gold/factPostActivity/", streaming=True)
-gold.writeData(factCmtActi, "spark_catalog.gold.factCommentActivity", checkpointPath="s3a://checkpoint/lakehouse/gold/factCommentActivity/", streaming= True)
+spark.streams.awaitAnyTermination()
 
+
+dfCmtNew=gold.dfCmtNew
+
+qDCmt=gold.writeData(dfCmtNew, batchFunc=processDCmt)
+qDPost=gold.writeData(dfCmtNew, batchFunc=processDPost)

@@ -8,10 +8,10 @@ from pyspark.sql.functions import expr
 
 
 class GoldTransformer(BaseTransformer):
-    def __init__(self, sparkSession, dfSubNew, dfCmtNew):
+    def __init__(self, sparkSession, pathSub, pathCmt, streaming=False):
         super().__init__(sparkSession)
-        self.dfSubNew = dfSubNew
-        self.dfCmtNew = dfCmtNew
+        self.dfSubNew = super().readData(pathSub, streaming=streaming)
+        self.dfCmtNew = super().readData(pathCmt, streaming=streaming)
     
     def createDimTime(self,timestampCol="createdDate", existingDimTime=None):
 
@@ -181,7 +181,7 @@ class GoldTransformer(BaseTransformer):
             F.col("id"), col("time_key"), col("sentiment_key"), col("author_key"),col("subreddit_key"),col("postType_key"),
            col("score"),col("num_comments"),col("total_awards_received"),col("subreddit_subscribers"))
             .withColumnRenamed("id", "post_key")
-            .withColumn("id", F.monotonically_increasing_id()))
+            .withColumn("id", expr("uuid()")))
         return factActi
         
     def createFactCommentActivity(self, dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment):
@@ -226,6 +226,6 @@ class GoldTransformer(BaseTransformer):
             col("post_key"),
             col("score"),col("controversiality"), col("total_awards_received"))
             .withColumnRenamed("id", "comment_key")
-            .withColumn("id", F.monotonically_increasing_id()))
+            .withColumn("id", expr("uuid()")))
 
         return factActi
