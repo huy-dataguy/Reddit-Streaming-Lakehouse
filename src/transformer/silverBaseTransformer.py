@@ -6,15 +6,48 @@ from pyspark.sql.functions import *
 class BaseTransformer:
     def __init__(self, sparkSession):
         self.spark = sparkSession
-    def readData(self, pathIn, format="iceberg"):
-        return self.spark.table(pathIn)
+    def readData(self, pathIn, format="iceberg", streaming=False):
+        if streaming:
+            return (self.spark
+                        .readStream # add trigger, when -- 1 batch interval
+                        .format(format)
+                        .load(pathIn))
+        else:
+            return self.spark.table(pathIn)
+        
+    def readSnapshot(self, pathIn, snapshots):
+        #create dict
+        #**options unpack dict to all key arg
+        startSnap = snapshots[0]
+        endSnap=snapshots[1]
+        options = {}
+        if startSnap is not None:
+            options["start-snapshot-id"] = str(startSnap)
+        if endSnap is not None:
+            options["end-snapshot-id"] = str(endSnap)
+        return (self.spark.read
+                    .format("iceberg")
+                    .options(**options)
+                    .load(pathIn))
+
 
     def writeData(self, df, pathOut, format="iceberg", checkpointPath=None, mode="append", streaming=False):
-        ## theem khi read stream, read batch airflow
-        (df.write
-        .format(format)
-        .mode(mode)
-        .saveAsTable(pathOut))
+        if streaming:
+            (df.writeStream
+            # query = (df.writeStream
+                .format(format)
+                .outputMode(mode)
+                .trigger(processingTime="5 seconds")
+                .option("checkpointLocation", checkpointPath)
+                .toTable(pathOut))
+            # query.awaitTermination()  
+    
+        else:
+            (df.write
+                .format(format)
+                .mode(mode)
+                .saveAsTable(pathOut))
+
 
     def showShape(self, df):
         return (len(df.columns), df.count())

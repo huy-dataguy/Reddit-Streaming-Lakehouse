@@ -5,7 +5,7 @@ from pyspark.sql.functions import *
 
 from transformer.goldTransformer import GoldTransformer
 from transformer.silverBaseTransformer import BaseTransformer
-
+from utils.getIdSnapshot import getIdSnapshot
 spark = (SparkSession.builder
         .appName("SilverTransformer")
         .enableHiveSupport()
@@ -23,31 +23,91 @@ spark = (SparkSession.builder
         .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
         .getOrCreate())
 
+#dfSub get new data from 2 snapshot ID - in the first get all new data from first snapshot
+pathRS="spark_catalog.silver.reddit_submission"
+# snapshotsSub=getIdSnapshot(spark, pathRS)
 
-dfSub = BaseTransformer(spark).readData("spark_catalog.silver.reddit_submission")
-dfCmt = BaseTransformer(spark).readData("spark_catalog.silver.reddit_comment")
+#### convert to readStream dont need to use read Snapshot start-end...........
+#******************
+# dfSubNew = BaseTransformer(spark).readSnapshot(pathRS, snapshotsSub)
 
-gold=GoldTransformer(spark, dfSub, dfCmt)
+pathRC ="spark_catalog.silver.reddit_comment"
+# snapshotsCmt=getIdSnapshot(spark, pathRC)
+# dfCmtNew = BaseTransformer(spark).readSnapshot(pathRC, snapshotsCmt)
 
-dimTime = gold.createDimTime()
-dimAuthor = gold.createDimAuthor()
-dimSentiment = gold.createDimSentiment()
-dimSubreddit = gold.createDimSubreddit()
-dimPostType = gold.createDimPostType()
-dimPost = gold.createDimPost()
-dimComment = gold.createDimComment()
+dfSubNew = BaseTransformer(spark).readData(pathRS, streaming=True)
+dfCmtNew = BaseTransformer(spark).readData(pathRC, streaming=True)
+
+                                            
+gold=GoldTransformer(spark, dfSubNew, dfCmtNew)
+
+# func get lastest id snapshot
+# get existingDim time from snapshot
+pathDTime = "spark_catalog.gold.dimTime"
+# snapshotTime = getIdSnapshot(spark, pathDTime)
+# existDimTime = BaseTransformer(spark).readSnapshot(pathDTime, snapshotTime)
+
+existDimTime = BaseTransformer(spark).readData(pathDTime, streaming=True)
+dimTime = gold.createDimTime(existingDimTime=existDimTime) 
+gold.writeData(dimTime, pathDTime, checkpointPath="s3a://checkpoint/lakehouse/gold/dimTime/", streaming=True)
+
+# Get existing dimAuthor from snapshot for stream/batch processing
+pathDAuthor = "spark_catalog.gold.dimAuthor"
+# snapshotAuthor = getIdSnapshot(spark, pathDAuthor)
+# existDimAuthor = BaseTransformer(spark).readSnapshot(pathDAuthor, snapshotAuthor)
+existDimAuthor = BaseTransformer(spark).readData(pathDAuthor, streaming=True)
+
+dimAuthor = gold.createDimAuthor(existingAuthor=existDimAuthor)
+gold.writeData(dimAuthor, pathDAuthor, checkpointPath="s3a://checkpoint/lakehouse/gold/dimAuthor/", streaming=True)
+
+
+# Only create dimSentiment if it does not exist yet
+pathDSentiment = "spark_catalog.gold.dimSentiment"
+# snapshotSentiment = getIdSnapshot(spark, pathDSentiment)
+# existDimSentiment = BaseTransformer(spark).readSnapshot(pathDSentiment, snapshotSentiment)
+
+existDimSentiment = BaseTransformer(spark).readData(pathDSentiment)
+if existDimSentiment is None or existDimSentiment.rdd.isEmpty():
+        dimSentiment = gold.createDimSentiment()
+        gold.writeData(dimSentiment, pathDSentiment, checkpointPath="s3a://checkpoint/lakehouse/gold/dimSentiment/")
+else:
+        dimSentiment=existDimSentiment
+
+# Get existing dimSubreddit from snapshot for stream/batch processing
+pathDSubreddit = "spark_catalog.gold.dimSubreddit"
+# snapshotSubreddit = getIdSnapshot(spark, pathDSubreddit)
+# existDimSubreddit = BaseTransformer(spark).readSnapshot(pathDSubreddit, snapshotSubreddit)
+existDimSubreddit = BaseTransformer(spark).readData(pathDSubreddit, streaming=True)
+
+dimSubreddit = gold.createDimSubreddit(existingSubreddit=existDimSubreddit)
+gold.writeData(dimSubreddit, pathDSubreddit, checkpointPath="s3a://checkpoint/lakehouse/gold/dimSubreddit/", streaming=True)
+
+
+pathDPostType = "spark_catalog.gold.dimPostType"
+# snapshotPostType = getIdSnapshot(spark, pathDPostType)
+# existDimPostType = BaseTransformer(spark).readSnapshot(pathDPostType, snapshotPostType)
+existDimPostType =BaseTransformer(spark).readData(pathDPostType, streaming=True)
+dimPostType = gold.createDimPostType(existingPostType=existDimPostType)
+gold.writeData(dimPostType, pathDPostType, checkpointPath="s3a://checkpoint/lakehouse/gold/dimPostType", streaming=True)
+
+
+dfSub = BaseTransformer(spark).readData(pathRS)
+pathDPost = "spark_catalog.gold.dimPost"
+dimPost = gold.createDimPost(dfSub)
+gold.writeData(dimPost, pathDPost, mode="overwrite" ,checkpointPath="s3a://checkpoint/lakehouse/gold/dimPost/")
+
+
+pathDComment = "spark_catalog.gold.dimComment"
+# snapshotComment = getIdSnapshot(spark, pathDComment)
+# existDimComment = BaseTransformer(spark).readSnapshot(pathDComment, snapshotComment)
+existDimComment=BaseTransformer(spark).readData(pathDComment, streaming=True)
+dimComment = gold.createDimComment(existingCmt=existDimComment)
+gold.writeData(dimComment,pathDComment, checkpointPath="s3a://checkpoint/lakehouse/gold/dimComment/", streaming=True)
 
 
 factPostActi = gold.createFactPostActivity(dimTime, dimAuthor, dimSubreddit, dimPostType, dimSentiment)
 factCmtActi = gold. createFactCommentActivity(dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment)
 
-gold.writeData(dimTime, "spark_catalog.gold.dimTime", checkpointPath="s3a://checkpoint/lakehouse/gold/dimTime/")
-gold.writeData(dimAuthor, "spark_catalog.gold.dimAuthor", checkpointPath="s3a://checkpoint/lakehouse/gold/dimAuthor/")
-gold.writeData(dimSentiment, "spark_catalog.gold.dimSentiment", checkpointPath="s3a://checkpoint/lakehouse/gold/dimSentiment/")
-gold.writeData(dimSubreddit, "spark_catalog.gold.dimSubreddit", checkpointPath="s3a://checkpoint/lakehouse/gold/dimSubreddit/")
-gold.writeData(dimPostType, "spark_catalog.gold.dimPostType", checkpointPath="s3a://checkpoint/lakehouse/gold/dimPostType")
-gold.writeData(dimPost, "spark_catalog.gold.dimPost", checkpointPath="s3a://checkpoint/lakehouse/gold/dimPost/")
-gold.writeData(dimComment, "spark_catalog.gold.dimComment", checkpointPath="s3a://checkpoint/lakehouse/gold/dimComment/")
-gold.writeData(factPostActi, "spark_catalog.gold.factPostActivity", checkpointPath="s3a://checkpoint/lakehouse/gold/factPostActivity/")
-gold.writeData(factCmtActi, "spark_catalog.gold.factCommentActivity", checkpointPath="s3a://checkpoint/lakehouse/gold/factCommentActivity/")
+gold.writeData(factPostActi, "spark_catalog.gold.factPostActivity", checkpointPath="s3a://checkpoint/lakehouse/gold/factPostActivity/", streaming=True)
+gold.writeData(factCmtActi, "spark_catalog.gold.factCommentActivity", checkpointPath="s3a://checkpoint/lakehouse/gold/factCommentActivity/", streaming= True)
 

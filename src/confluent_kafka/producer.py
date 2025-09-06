@@ -111,13 +111,13 @@ def producerRS_RC(postColl, cmtColl, rsrcTopic, config, checkpointColl, mongoDB)
 
         else:
             print("No new posts/comments... waiting...")
-        # time.sleep(2)
+        time.sleep(1)
 
     producer.flush()
 
 
 if __name__ == '__main__':
-    rsrcTopic = ["Submission", "Comment"]
+    rsrcTopic = ["redditSubmission", "redditComment"]
 
     config = {
         "bootstrap.servers": "kafka1:9092",

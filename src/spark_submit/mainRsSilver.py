@@ -7,7 +7,7 @@ from transformer.silverSubTransfomer import SubmissionTransformer
 from transformer.silverCmtTransformer import CommentTransformer
 
 spark = (SparkSession.builder
-        .appName("SilverTransformer")
+        .appName("SilverTransformerSubmission")
         .enableHiveSupport()
         .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
         .config("spark.sql.catalog.spark_catalog", "org.apache.iceberg.spark.SparkSessionCatalog")
@@ -23,9 +23,7 @@ spark = (SparkSession.builder
         .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
         .getOrCreate())
 
-submissionTransformer = SubmissionTransformer(spark)
-submissionTransformer.transform("spark_catalog.bronze.reddit_submission", "spark_catalog.silver.reddit_submission", checkpointPath="s3a://checkpoint/lakehouse/silver/reddit_submission/")
 
-commentTransformer = CommentTransformer(spark)
-commentTransformer.transform("spark_catalog.bronze.reddit_comment", "spark_catalog.silver.reddit_comment", checkpointPath="s3a://checkpoint/lakehouse/silver/reddit_comment/")
+submissionTransformer = SubmissionTransformer(spark)
+submissionTransformer.transform("spark_catalog.bronze.reddit_submission", "spark_catalog.silver.reddit_submission", checkpointPath="s3a://checkpoint/lakehouse/silver/reddit_submission/", streaming=True)
 
