@@ -9,7 +9,7 @@ class BaseTransformer:
     def readData(self, pathIn, format="iceberg", streaming=False):
         if streaming:
             return (self.spark
-                        .readStream # add trigger, when -- 1 batch interval
+                        .readStream 
                         .format(format)
                         .load(pathIn))
         else:
@@ -31,15 +31,17 @@ class BaseTransformer:
                     .load(pathIn))
 
 
-    def writeData(self, df, pathOut, format="iceberg", checkpointPath=None, mode="append", streaming=False):
+    def writeData(self, df, pathOut, format="iceberg", checkpointPath=None, mode="append", streaming=False, batchFunc=None):
         if streaming:
-            (df.writeStream
+            query = (df.writeStream
             # query = (df.writeStream
                 .format(format)
                 .outputMode(mode)
                 .trigger(processingTime="5 seconds")
                 .option("checkpointLocation", checkpointPath)
-                .toTable(pathOut))
+                .foreachBatch(batchFunc)
+                .start())
+            return query
             # query.awaitTermination()  
     
         else:
@@ -47,6 +49,7 @@ class BaseTransformer:
                 .format(format)
                 .mode(mode)
                 .saveAsTable(pathOut))
+            return None
 
 
     def showShape(self, df):
