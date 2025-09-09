@@ -8,14 +8,13 @@ from pyspark.sql.functions import expr
 
 
 class GoldTransformer(BaseTransformer):
-    def __init__(self, sparkSession, dfSubNew, dfCmtNew):
+    def __init__(self, sparkSession):
         super().__init__(sparkSession)
-        self.dfSubNew = dfSubNew
-        self.dfCmtNew = dfCmtNew
-    
-    def createDimTime(self,timestampCol="createdDate", existingDimTime=None):
 
-        dfTimestamp=(self.dfSubNew.select(timestampCol).distinct().union(self.dfCmtNew.select(timestampCol).distinct())).distinct()
+    
+    def createDimTime(self,timestampCol="createdDate", existingDimTime=None, dfSubNew, dfCmtNew):
+
+        dfTimestamp=(dfSubNew.select(timestampCol).distinct().union(dfCmtNew.select(timestampCol).distinct())).distinct()
         
 
         if existingDimTime is not None:
@@ -36,9 +35,9 @@ class GoldTransformer(BaseTransformer):
                             .withColumnRenamed("createdDate", "time_key"))
         return dimTime
         
-    def createDimAuthor(self, authorName="author", fullName="author_fullname", existingAuthor=None):
-        dimAuthor=(self.dfSubNew.select(authorName, fullName).distinct()
-            .union(self.dfCmtNew.select(authorName, fullName).distinct())
+    def createDimAuthor(self, authorName="author", fullName="author_fullname", existingAuthor=None, dfSubNew, dfCmtNew):
+        dimAuthor=(dfSubNew.select(authorName, fullName).distinct()
+            .union(dfCmtNew.select(authorName, fullName).distinct())
             .distinct()
             .withColumnRenamed("author_fullname", "author_key"))
         
@@ -50,9 +49,9 @@ class GoldTransformer(BaseTransformer):
             )
         return dimAuthor
 
-    def createDimSubreddit(self, subredditId="subreddit_id", subredditName="subreddit", subredditNamePrefixed="subreddit_name_prefixed", subredditType="subreddit_type", existingSubreddit=None):
+    def createDimSubreddit(self, subredditId="subreddit_id", subredditName="subreddit", subredditNamePrefixed="subreddit_name_prefixed", subredditType="subreddit_type", existingSubreddit=None, dfSubNew, dfCmtNew):
         dimSubreddit = (
-            self.dfSubNew.select(
+            dfSubNew.select(
                 F.col(subredditId),
                 F.col(subredditName),
                 F.col(subredditNamePrefixed),
@@ -69,9 +68,9 @@ class GoldTransformer(BaseTransformer):
             )
         return dimSubreddit
 
-    def createDimPostType(self, postType="post_hint", existingPostType=None):
+    def createDimPostType(self, postType="post_hint", existingPostType=None, dfSubNew, dfCmtNew):
         dimPostType = (
-            self.dfSubNew.select(F.col(postType)).distinct()
+            dfSubNew.select(F.col(postType)).distinct()
             .withColumn("postType_key", expr("uuid()"))
         )
         if existingPostType is not None:
@@ -91,8 +90,8 @@ class GoldTransformer(BaseTransformer):
                         .withColumn("sentiment_key", F.monotonically_increasing_id()))
         return dimSentiment
 
-    def createDimPost (self, dfOldSub=None):
-        dfCmt = self.dfCmtNew.select("*").where((F.col("deleted_by_mod") == True) | (F.col("deleted_by_auto") == True)).dropDuplicates(["link_clean"])
+    def createDimPost (self, dfOldSub=None, dfSubNew, dfCmtNew):
+        dfCmt = dfCmtNew.select("*").where((F.col("deleted_by_mod") == True) | (F.col("deleted_by_auto") == True)).dropDuplicates(["link_clean"])
 
         dimJoinRaw = (
             dfOldSub.join(dfCmt, dfOldSub["id"] == dfCmt["link_clean"], "left")
@@ -135,8 +134,8 @@ class GoldTransformer(BaseTransformer):
 
         return dimPost
     
-    def createDimComment(self, existingCmt=None):
-        dfCmt=self.dfCmtNew
+    def createDimComment(self, existingCmt=None, dfSubNew, dfCmtNew):
+        dfCmt=dfCmtNew
         dimComment=(dfCmt.select(F.col("id"), F.col("body"), F.col("permalink")
                                          , F.col("edited"), F.col("is_submitter")
                                          , F.col("controversiality"))
@@ -153,9 +152,9 @@ class GoldTransformer(BaseTransformer):
 
 
 
-    def createFactPostActivity(self,dimTime, dimAuthor, dimSubreddit, dimPostType, dimSentiment):
+    def createFactPostActivity(self,dimTime, dimAuthor, dimSubreddit, dimPostType, dimSentiment, dfSubNew, dfCmtNew):
         
-        dfSub = (self.dfSubNew
+        dfSub = (dfSubNew
             .withColumn("text", F.concat_ws(" ", F.col("title"), F.col("selftext")))
             .withColumn("sentiment_label", sentimentUdf(F.col("text")))
         )
@@ -181,12 +180,12 @@ class GoldTransformer(BaseTransformer):
             F.col("id"), col("time_key"), col("sentiment_key"), col("author_key"),col("subreddit_key"),col("postType_key"),
            col("score"),col("num_comments"),col("total_awards_received"),col("subreddit_subscribers"))
             .withColumnRenamed("id", "post_key")
-            .withColumn("id", F.monotonically_increasing_id()))
+            .withColumn("id", expr("uuid()")))
         return factActi
         
-    def createFactCommentActivity(self, dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment):
+    def createFactCommentActivity(self, dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment, dfSubNew, dfCmtNew):
          
-        dfCmt = self.dfCmtNew.withColumn(
+        dfCmt = dfCmtNew.withColumn(
             "sentiment_label", sentimentUdf(F.col("body"))
         )
 
@@ -226,6 +225,6 @@ class GoldTransformer(BaseTransformer):
             col("post_key"),
             col("score"),col("controversiality"), col("total_awards_received"))
             .withColumnRenamed("id", "comment_key")
-            .withColumn("id", F.monotonically_increasing_id()))
+            .withColumn("id", expr("uuid()")))
 
         return factActi
