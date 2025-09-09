@@ -11,7 +11,7 @@ WORKDIR /home/sparkuser
 
 RUN cp spark/yarn/spark-*-yarn-shuffle.jar hadoop/share/hadoop/yarn/lib/
 
-COPY config/spark_on_YARN/worker/hdfs-site.xml hadoop/etc/hadoop/hdfs-site.xml
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/worker/hdfs-site.xml hadoop/etc/hadoop/hdfs-site.xml
 
 USER root
 
