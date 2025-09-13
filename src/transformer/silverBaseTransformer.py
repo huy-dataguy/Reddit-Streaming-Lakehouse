@@ -3,17 +3,26 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
+from pyspark.sql.utils import AnalysisException
+
+
+
 class BaseTransformer:
     def __init__(self, sparkSession):
         self.spark = sparkSession
     def readData(self, pathIn, format="iceberg", streaming=False):
-        if streaming:
-            return (self.spark
-                        .readStream 
-                        .format(format)
-                        .load(pathIn))
-        else:
-            return self.spark.table(pathIn)
+        try:
+
+            if streaming:
+                return (self.spark
+                            .readStream 
+                            .format(format)
+                            .load(pathIn))
+            else:
+                return self.spark.table(pathIn)
+        except AnalysisException:
+            return None
+        
         
     def readSnapshot(self, pathIn, snapshots):
         #create dict
