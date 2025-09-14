@@ -139,8 +139,12 @@ spark-submit --py-files utils.zip mainBronze.py
   spark-submit --py-files transformer.zip,utils.zip mainRcSilver.py
 ```
 - 5 transform gold
+
 ```bash
-  spark-submit --py-files transformer.zip mainGold.py
+  spark-submit --py-files utils.zip createDim.py
+
+```bash
+  spark-submit --py-files transformer.zip,utils.zip mainDimGold.py
 ```
 
 ##Check xem data bronze, silver, gold co ok chua, co du chua
@@ -155,6 +159,7 @@ spark-shell \
 ```bash
 spark.read.table("spark_catalog.bronze.reddit_comment").show()
 ```
+spark.read.table("spark_catalog.gold.dimtime").show()
 
 ```bash
 spark.read.table("spark_catalog.bronze.reddit_submission").show()
