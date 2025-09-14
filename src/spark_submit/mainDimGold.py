@@ -11,76 +11,80 @@ from utils.getSparkConfig import getSparkConfig
 
 spark = getSparkConfig("GoldTransformDim")
 
-querys=[]
 
 pathRS="spark_catalog.silver.reddit_submission"
 pathRC ="spark_catalog.silver.reddit_comment"
 
 pathDTime = "spark_catalog.gold.dimTime"
 pathDAuthor = "spark_catalog.gold.dimAuthor"
-pathDSentiment = "spark_catalog.gold.dimSentiment"
 pathDSubreddit = "spark_catalog.gold.dimSubreddit"
+pathDPostType = "spark_catalog.gold.dimPostType"
 pathDPost = "spark_catalog.gold.dimPost"
 pathDComment = "spark_catalog.gold.dimComment"
-pathDPostType = "spark_catalog.gold.dimPostType"
+pathDSentiment = "spark_catalog.gold.dimSentiment"
 
-
-gold = GoldTransformer(spark, pathRS, pathRC, True)
-
+gold = GoldTransformer(spark)
 dfSubNew=gold.readData(pathIn=pathRS, streaming=True)
-
 dfCmtNew=gold.readData(pathIn=pathRC, streaming=True)
-                                            
-existDimTime =gold.readData(pathDTime, streaming=True)
-def processDimTime(batch_df, batch_id):
-        dimTime = gold.createDimTime(existingDimTime=batch_df, dfSubNew, dfCmtNew) 
+  
+
+
+dimSentiment = gold.createDimSentiment()
+gold.writeData(dimSentiment, pathDSentiment, mode="overwrite")
+
+def processSubNew(batch_df, batch_id):
+        existDimTime = gold.readData(pathDTime, streaming=False)
+        dimTime = gold.createDimTime(existingDimTime=existDimTime, dfNew=batch_df) 
         gold.writeData(dimTime, pathDTime)
 
-qDTime=gold.writeData(df=existDimTime, pathOut=pathDTime, checkpointPath="s3a://checkpoint/lakehouse/gold/dimTime/", streaming=True, batchFunc=processDimTime)
-querys.append(qDTime)
+        existDimAuthor = gold.readData(pathDAuthor, streaming=False)
+        dimAuthor = gold.createDimAuthor(existingAuthor=existDimAuthor, dfNew=batch_df) 
+        gold.writeData(dimAuthor, pathDAuthor)
 
-existDimAuthor = gold.readData(pathDAuthor, streaming=True)
-def processDimAuthor(batch_df, batch_id):
-        dimTime = gold.createDimAuthor(existingAuthor=batch_df, dfSubNew, dfCmtNew) 
-        gold.writeData(dimTime, pathDAuthor)
-
-qDAuthor=gold.writeData(df=existDimAuthor, pathOut=pathDAuthor, checkpointPath="s3a://checkpoint/lakehouse/gold/dimAuthor/", streaming=True, batchFunc=processDimAuthor)
-querys.append(qDAuthor)
-
-existDimSentiment = gold.readData(pathDSentiment)
-if existDimSentiment is None:
-        dimSentiment = gold.createDimSentiment()
-        gold.writeData(dimSentiment, pathDSentiment)
-else:
-        dimSentiment=existDimSentiment
-
-existDimSubreddit = gold.readData(pathDSubreddit, streaming=True)
-def processDimSubreddit(batch_df, batch_id):
-        dimSubreddit = gold.createDimSubreddit(existingSubreddit=batch_df)
+        existDimSubreddit = gold.readData(pathDSubreddit)
+        dimSubreddit = gold.createDimSubreddit(existingSubreddit=existDimSubreddit, dfNew=batch_df)
         gold.writeData(dimSubreddit, pathDSubreddit)
-qDSubreddit=gold.writeData(existDimSubreddit, pathOut=pathDSubreddit,checkpointPath="s3a://checkpoint/lakehouse/gold/dimSubreddit/", streaming=True, batchFunc=processDimSubreddit)
-querys.append(qDSubreddit)
 
-existDimPostType =gold.readData(pathDPostType, streaming=True)
-def processDPostType(batch_df, batch_id):
-        dimPostType = gold.createDimPostType(existingPostType=batch_df)
+        existDimPostType =gold.readData(pathDPostType)
+        dimPostType = gold.createDimPostType(existingPostType=existDimPostType, dfNew=batch_df)
         gold.writeData(dimPostType, pathDPostType)
-qDPostType=gold.writeData(existDimPostType, pathDPostType, checkpointPath="s3a://checkpoint/lakehouse/gold/dimPostType", streaming=True, batchFunc=processDPostType)
-querys.append(qDPostType)
+
+        existDimPost =gold.readData(pathDPost)
+        dimPost = gold.createDimPost(dfSubNew=batch_df, existDPost=existDimPost)
+        gold.writeData(dimPost, pathDPost)
+
+qSubNew=(dfSubNew.writeStream
+                .option("checkpointLocation","s3a://checkpoint/lakehouse/gold/SubNew/")
+                .foreachBatch(processSubNew)
+                .start())
 
 
-def processDPost(batch_df, batch_id):
-        dimPost = gold.createDimPost(dfOldSub=batch_df)
-        gold.writeData(dimPost, pathRS, mode="override")
 
-qDPost=gold.writeData(df=dfSubNew, pathOut=pathRC,checkpointPath="s3a://checkpoint/lakehouse/gold/dimPost/", streaming=True, batchFunc=processDPost)
-querys.append(qDPost)
 
-existDimComment=gold.readData(pathDComment, streaming=True)
-def processDCmt(batch_df, batch_id):
-        dimComment = gold.createDimComment(existingCmt=batch_df)
+
+def processCmtNew(batch_df, batch_id):
+        existDimTime = gold.readData(pathDTime, streaming=False)
+        dimTime = gold.createDimTime(existingDimTime=existDimTime, dfNew=batch_df) 
+        gold.writeData(dimTime, pathDTime)
+
+        existDimAuthor = gold.readData(pathDAuthor, streaming=False)
+        dimAuthor = gold.createDimAuthor(existingAuthor=existDimAuthor, dfNew=batch_df) 
+        gold.writeData(dimAuthor, pathDAuthor)
+
+        # code in create fact to update status okokoko
+        # existDimPost =gold.readData(pathDPost)
+        # dimPostUpdate =gold.updateDimPostStatus(dimPostExist=existDimPost, dfCmtNew=batch_df)
+        # gold.writeData(dimPostUpdate, pathDPost, mode="overwrite")
+
+        existDimComment=gold.readData(pathDComment)
+        dimComment = gold.createDimComment(existingCmt=existDimComment, dfCmtNew=batch_df)
         gold.writeData(dimComment,pathDComment)
-qDCmt=gold.writeData(existDimComment, pathDComment, checkpointPath="s3a://checkpoint/lakehouse/gold/dimComment/", streaming=True, batchFunc=processDCmt)
-querys.append(qDCmt)
+qCmtNew=(dfCmtNew.writeStream
+                .option("checkpointLocation","s3a://checkpoint/lakehouse/gold/CmtNew/")
+                .foreachBatch(processCmtNew)
+                                .start())
+
+
 
 spark.streams.awaitAnyTermination()
+
