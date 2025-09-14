@@ -187,7 +187,9 @@ class GoldTransformer(BaseTransformer):
     def createDimComment(self, existingCmt=None, dfCmtNew=None):
         dimComment=(dfCmtNew.select(F.col("id"), F.col("body"), F.col("permalink")
                                          , F.col("edited"), F.col("is_submitter")
-                                         , F.col("controversiality"))
+                                         , F.col("controversiality"),
+                                         F.col("deleted_by_mod"),
+                                         F.col("deleted_by_auto"))
                                         # , F.col("sentiment_label"))
                                 .withColumnRenamed("id", "comment_key"))
         if existingCmt is not None:
@@ -201,8 +203,16 @@ class GoldTransformer(BaseTransformer):
 
 
 
-    def createFactPostActivity(self,dimTime, dimAuthor, dimSubreddit, dimPostType, dimSentiment, dfSubNew, dfCmtNew):
+    def createFactPostActivity(self,dimTime, dimAuthor, dimSubreddit, dimPostType, dimSentiment, dimCmt, dfSubNew):
         
+        dfCmtFlag = (
+            dimCmt
+            .filter((F.col("deleted_by_mod") == True) | (F.col("deleted_by_auto") == True))
+            .dropDuplicates(["link_clean"])
+        )
+
+
+              
         dfSub = (dfSubNew
             .withColumn("text", F.concat_ws(" ", F.col("title"), F.col("selftext")))
             .withColumn("sentiment_label", sentimentUdf(F.col("text")))
@@ -213,8 +223,32 @@ class GoldTransformer(BaseTransformer):
                                                 col("score"), col("num_comments"),
                                                col("total_awards_received"),
                                                col("sentiment_label"),
+                                               col("accDeleted"),
+                                               col("postDeleted"),
                                               col("subreddit_subscribers")))
         
+        dfPostActi = (
+            dfPostActi
+            .join(
+                dfCmtFlag,    
+                dfPostActi["id"] == dfCmtFlag["link_clean"], 
+                "left"                
+            )
+            .select(
+                dfPostActi["*"],  
+                dfCmtFlag["deleted_by_mod"],
+                dfCmtFlag["deleted_by_auto"]
+            )
+            .withColumn(
+                "postStatus",
+                F.when(F.col("accDeleted") == True, F.lit("AuthorDeleted"))
+                .when((F.col("postDeleted") == True) & (F.col("accDeleted") == False), F.lit("SelfDeleted"))
+                .when(F.col("deleted_by_mod") == True, F.lit("ModDeleted"))
+                .when(F.col("deleted_by_auto") == True, F.lit("AutoDeleted"))
+                .otherwise(F.lit("Active"))
+            )
+            .drop("deleted_by_mod", "deleted_by_auto"))
+
         factActi=dfPostActi.join(dimTime, dimTime.time_key==dfPostActi.createdDate,
                                  "left").drop("createdDate")
         factActi=factActi.join(dimAuthor, dimAuthor.author_key==factActi.author_fullname,
@@ -227,12 +261,12 @@ class GoldTransformer(BaseTransformer):
 
         factActi = (factActi.select(
             F.col("id"), col("time_key"), col("sentiment_key"), col("author_key"),col("subreddit_key"),col("postType_key"),
-           col("score"),col("num_comments"),col("total_awards_received"),col("subreddit_subscribers"))
+           col("score"),col("num_comments"),col("total_awards_received"),col("subreddit_subscribers"), col("postStatus"))
             .withColumnRenamed("id", "post_key")
             .withColumn("id", expr("uuid()")))
         return factActi
         
-    def createFactCommentActivity(self, dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment, dfSubNew, dfCmtNew):
+    def createFactCommentActivity(self, dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment, dfCmtNew):
          
         dfCmt = dfCmtNew.withColumn(
             "sentiment_label", sentimentUdf(F.col("body"))
