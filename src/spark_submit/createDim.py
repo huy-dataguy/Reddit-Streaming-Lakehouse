@@ -134,7 +134,9 @@ CREATE TABLE IF NOT EXISTS spark_catalog.gold.dimcomment (
   permalink STRING,
   edited BOOLEAN,
   is_submitter BOOLEAN,
-  controversiality INT
+  controversiality INT,
+  deleted_by_mod BOOLEAN,
+  deleted_by_auto BOOLEAN
 )
 USING iceberg
 LOCATION 's3a://lakehouse/gold.db/dimComment'
