@@ -135,6 +135,8 @@ CREATE TABLE IF NOT EXISTS spark_catalog.gold.dimcomment (
   edited BOOLEAN,
   is_submitter BOOLEAN,
   controversiality INT,
+  parent_clean STRING,
+  link_clean STRING,
   deleted_by_mod BOOLEAN,
   deleted_by_auto BOOLEAN
 )
