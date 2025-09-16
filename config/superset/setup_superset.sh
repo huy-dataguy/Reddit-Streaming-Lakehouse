@@ -6,9 +6,9 @@ SUPERSET_ADMIN_USER="admin"
 SUPERSET_ADMIN_PASSWORD="AdminPassword123!"
 SUPERSET_ADMIN_EMAIL="admin@example.com"
 TRINO_CONN_NAME="Trino"
-TRINO_CONN_URI="trino://admin@trino-coordinator:8080/delta"
+TRINO_CONN_URI="trino://admin@trino-coordinator:8080/iceberg"
 
-EXPORT_ZIP_PATH="../dashboard/my_dashboard.zip"  
+EXPORT_ZIP_PATH="./dashboard/my_dashboard.zip"  
 
 echo "=== Thiết lập Superset ==="
 
@@ -57,13 +57,13 @@ if [ -f "$EXPORT_ZIP_PATH" ]; then
         echo "Không tìm thấy thư mục datasets trong file export."
     fi
 
-    # echo "=== Import dashboards sau ==="
-    # docker cp "$EXPORT_ZIP_PATH" $SUPERSET_CONTAINER:/tmp/my_dashboard.zip
-    # docker exec -it $SUPERSET_CONTAINER sh -c "
-    #     superset import-dashboards \
-    #         --path /tmp/my_dashboard.zip \
-    #         --username $SUPERSET_ADMIN_USER
-    # "
+    echo "=== Import dashboards sau ==="
+    docker cp "$EXPORT_ZIP_PATH" $SUPERSET_CONTAINER:/tmp/my_dashboard.zip
+    docker exec -it $SUPERSET_CONTAINER sh -c "
+        superset import-dashboards \
+            --path /tmp/my_dashboard.zip \
+            --username $SUPERSET_ADMIN_USER
+    "
 else
     echo "Không tìm thấy file export dashboard: $EXPORT_ZIP_PATH"
 fi
