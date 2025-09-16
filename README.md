@@ -25,7 +25,7 @@ docker compose -f spark.compose.yml up -d
 
 ## 3. build - run minio
 ```bash
-docker compose -f minIO.compose.yaml up -d
+docker compose -f minio.compose.yaml up -d
 
 ```
 
