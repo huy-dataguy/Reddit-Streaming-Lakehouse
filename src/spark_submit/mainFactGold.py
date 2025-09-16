@@ -4,8 +4,6 @@ from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
 from transformer.goldTransformer import GoldTransformer
-from transformer.silverBaseTransformer import BaseTransformer
-from utils.getIdSnapshot import getIdSnapshot
 from utils.getSparkConfig import getSparkConfig
 
 pathRS="spark_catalog.silver.reddit_submission"
@@ -29,18 +27,28 @@ dfSubNew=gold.readData(pathIn=pathRS, streaming=True)
 dfCmtNew=gold.readData(pathIn=pathRC, streaming=True)
 
 
-def processFactPostActivity(batch_df, batch_id):
-        dTime = gold.readData(pathDTime)
-        dAuthor = gold.readData(pathDAuthor)
-        dSubreddit = gold.readData(pathDSubreddit)
-        dPostType = gold.readData(pathDPostType)
-        dSentiment = gold.readData(pathDSentiment)
+# def processFactPostActivity(batch_df, batch_id):
+#         dTime = gold.readData(pathDTime)
+#         dAuthor = gold.readData(pathDAuthor)
+#         dSubreddit = gold.readData(pathDSubreddit)
+#         dPostType = gold.readData(pathDPostType)
+#         dSentiment = gold.readData(pathDSentiment)
+#         dCmt = gold.readData(pathDComment)
 
 
-        factPost = gold.createFactPostActivity(dTime, dAuthor, dSubreddit, dPostType, dSentiment, batch_df)
-        factPost=gold.writeData(factPost,pathOut= pathFPost)
+#         factPost = gold.createFactPostActivity(dTime, dAuthor, dSubreddit, dPostType, dSentiment, dCmt, batch_df)
+#         gold.writeData(factPost,pathOut= pathFPost)
+        
+
+# qFPost = (dfSubNew.writeStream
+#     .option("checkpointLocation", "s3a://checkpoint/lakehouse/gold/factPostActivity/")
+#     .foreachBatch(processFactPostActivity)
+#     .start()
+# )
+
 
 def processFactCommentActivity(batch_df, batch_id):
+    try:
         dTime = gold.readData(pathDTime)
         dAuthor = gold.readData(pathDAuthor)
         dSubreddit = gold.readData(pathDSubreddit)
@@ -48,14 +56,13 @@ def processFactCommentActivity(batch_df, batch_id):
         dSentiment = gold.readData(pathDSentiment)
 
         factComment = gold.createFactCommentActivity(dTime, dAuthor, dSubreddit, dPost, dSentiment, batch_df)
-        factComment=gold.writeData(factComment, pathOut=pathFCmt)
+        gold.writeData(factComment, pathOut=pathFCmt)
 
+        print("heyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy halo")
 
-qFPost = (dfSubNew.writeStream
-    .option("checkpointLocation", "s3a://checkpoint/lakehouse/gold/factPostActivity/")
-    .foreachBatch(processFactPostActivity)
-    .start()
-)
+    except Exception as e:
+        print(f"Error batch {batch_id}: {e}")
+
 
 qFCmt = (dfCmtNew.writeStream
     .option("checkpointLocation", "s3a://checkpoint/lakehouse/gold/factCommentActivity/")
