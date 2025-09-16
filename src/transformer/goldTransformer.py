@@ -188,6 +188,8 @@ class GoldTransformer(BaseTransformer):
         dimComment=(dfCmtNew.select(F.col("id"), F.col("body"), F.col("permalink")
                                          , F.col("edited"), F.col("is_submitter")
                                          , F.col("controversiality"),
+                                         F.col("parent_clean"),
+                                         F.col("link_clean"),
                                          F.col("deleted_by_mod"),
                                          F.col("deleted_by_auto"))
                                         # , F.col("sentiment_label"))
