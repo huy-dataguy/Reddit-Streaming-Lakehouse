@@ -226,3 +226,4 @@ trino-plugin/
 streaming/
 utils.zip
 uteStreaming/
+superset_import_tmp/
