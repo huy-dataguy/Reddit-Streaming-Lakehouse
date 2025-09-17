@@ -34,9 +34,14 @@ RUN mkdir -p /home/sparkuser/.ssh && \
     chmod 600 /home/sparkuser/.ssh/authorized_keys && \
     chown -R sparkuser:sparkuser /home/sparkuser/.ssh
     
-COPY config/spark_on_YARN/base/core-site.xml hadoop/etc/hadoop/core-site.xml
-COPY config/spark_on_YARN/base/yarn-site.xml hadoop/etc/hadoop/yarn-site.xml
-COPY config/spark_on_YARN/base/mapred-site.xml hadoop/etc/hadoop/mapred-site.xml
+# COPY config/spark_on_YARN/base/core-site.xml hadoop/etc/hadoop/core-site.xml
+# COPY config/spark_on_YARN/base/yarn-site.xml hadoop/etc/hadoop/yarn-site.xml
+# COPY config/spark_on_YARN/base/mapred-site.xml hadoop/etc/hadoop/mapred-site.xml
+
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/base/core-site.xml hadoop/etc/hadoop/core-site.xml
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/base/yarn-site.xml hadoop/etc/hadoop/yarn-site.xml
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/base/mapred-site.xml hadoop/etc/hadoop/mapred-site.xml
+
 RUN echo 'export HADOOP_HOME=/home/sparkuser/hadoop'>>~/.bashrc
 RUN echo 'export SPARK_HOME=/home/sparkuser/spark'>>~/.bashrc
 

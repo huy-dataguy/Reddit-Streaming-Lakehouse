@@ -16,10 +16,7 @@ services:
 
 
   trino-worker-1:
-    build:
-      context: ./trino
-      dockerfile: trino.dockerfile
-    image: trinodb/trino:423
+    image: trino-with-s3a
     container_name: trino-worker-1
     hostname: trino-worker-1
     volumes:
@@ -28,10 +25,7 @@ services:
       - reddit_network
 
   trino-worker-2:
-    build:
-      context: ./trino
-      dockerfile: trino.dockerfile
-    image: trinodb/trino:423
+    image: trino-with-s3a
     container_name: trino-worker-2
     hostname: trino-worker-2
     volumes:

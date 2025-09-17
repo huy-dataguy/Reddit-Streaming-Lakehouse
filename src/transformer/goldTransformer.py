@@ -12,10 +12,9 @@ class GoldTransformer(BaseTransformer):
         super().__init__(sparkSession)
 
     
-    def createDimTime(self,timestampCol="createdDate", existingDimTime=None, dfSubNew, dfCmtNew):
+    def createDimTime(self,timestampCol="createdDate", existingDimTime=None, dfNew=None):
 
-        dfTimestamp=(dfSubNew.select(timestampCol).distinct().union(dfCmtNew.select(timestampCol).distinct())).distinct()
-        
+        dfTimestamp=dfNew.select(timestampCol).distinct()
 
         if existingDimTime is not None:
             dfTimestamp = dfTimestamp.join(
@@ -35,11 +34,13 @@ class GoldTransformer(BaseTransformer):
                             .withColumnRenamed("createdDate", "time_key"))
         return dimTime
         
-    def createDimAuthor(self, authorName="author", fullName="author_fullname", existingAuthor=None, dfSubNew, dfCmtNew):
-        dimAuthor=(dfSubNew.select(authorName, fullName).distinct()
-            .union(dfCmtNew.select(authorName, fullName).distinct())
-            .distinct()
-            .withColumnRenamed("author_fullname", "author_key"))
+    def createDimAuthor(self, authorName="author", fullName="author_fullname", existingAuthor=None, dfNew=None):
+        dimAuthor = (
+            dfNew.filter(F.col("accDeleted") == False)
+                .select(authorName, fullName)
+                .distinct()
+                .withColumnRenamed("author_fullname", "author_key"))
+
         
         if existingAuthor is not None:
             dimAuthor = dimAuthor.join(
@@ -49,9 +50,9 @@ class GoldTransformer(BaseTransformer):
             )
         return dimAuthor
 
-    def createDimSubreddit(self, subredditId="subreddit_id", subredditName="subreddit", subredditNamePrefixed="subreddit_name_prefixed", subredditType="subreddit_type", existingSubreddit=None, dfSubNew, dfCmtNew):
+    def createDimSubreddit(self, subredditId="subreddit_id", subredditName="subreddit", subredditNamePrefixed="subreddit_name_prefixed", subredditType="subreddit_type", existingSubreddit=None, dfNew=None):
         dimSubreddit = (
-            dfSubNew.select(
+            dfNew.select(
                 F.col(subredditId),
                 F.col(subredditName),
                 F.col(subredditNamePrefixed),
@@ -68,18 +69,25 @@ class GoldTransformer(BaseTransformer):
             )
         return dimSubreddit
 
-    def createDimPostType(self, postType="post_hint", existingPostType=None, dfSubNew, dfCmtNew):
+    def createDimPostType(self, postType="post_hint", existingPostType=None, dfNew=None):
+
+        dfNew = dfNew.withColumn(
+        postType,
+        F.when(F.col(postType).isNull(), F.lit("UNKNOWN")).otherwise(F.col(postType)))
+
         dimPostType = (
-            dfSubNew.select(F.col(postType)).distinct()
-            .withColumn("postType_key", expr("uuid()"))
-        )
+            dfNew.select(F.col(postType)).distinct()
+            .withColumn("postType_key", expr("uuid()")))
+
         if existingPostType is not None:
             dimPostType = dimPostType.join(
-                existingPostType.select("postType_key"),
-                dimPostType["postType_key"] == existingPostType["postType_key"],
-                "left_anti"
+            existingPostType.select("post_hint"),
+            dimPostType[postType] == existingPostType["post_hint"],
+            "left_anti"
             )
+
         return dimPostType
+    
     
     def createDimSentiment(self):
         sentiment_labels = ["negative", "positive", "neutral"]
@@ -90,55 +98,100 @@ class GoldTransformer(BaseTransformer):
                         .withColumn("sentiment_key", F.monotonically_increasing_id()))
         return dimSentiment
 
-    def createDimPost (self, dfOldSub=None, dfSubNew, dfCmtNew):
-        dfCmt = dfCmtNew.select("*").where((F.col("deleted_by_mod") == True) | (F.col("deleted_by_auto") == True)).dropDuplicates(["link_clean"])
-
-        dimJoinRaw = (
-            dfOldSub.join(dfCmt, dfOldSub["id"] == dfCmt["link_clean"], "left")
-              .select(
-                  dfOldSub["id"],
-                  dfOldSub["title"],
-                  dfOldSub["selftext"],
-                  dfOldSub["permalink"],
-                  dfOldSub["url"],
-                  dfOldSub["domain"],
-                  dfOldSub["edited"],
-                  dfOldSub["locked"],
-                  dfOldSub["spoiler"],
-                  dfOldSub["over_18"],
-                  dfOldSub["stickied"],
-                  dfOldSub["is_original_content"],
-                  dfOldSub["link_flair_text"],
-                  dfOldSub["accDeleted"],
-                  dfOldSub["isPostSpam"],
-                  dfOldSub["matchPercent"],
-                  dfOldSub["postDeleted"],
-                  dfCmt["deleted_by_mod"],
-                  dfCmt["deleted_by_auto"]
-              )
-              .distinct()
+    def createDimPost(self, dfSubNew, existDPost=None):
+        newPosts = (
+            dfSubNew.select(
+                "id",
+                "title",
+                "selftext",
+                "permalink",
+                "url",
+                "domain",
+                "edited",
+                "locked",
+                "spoiler",
+                "over_18",
+                "stickied",
+                "is_original_content",
+                "link_flair_text",
+                "accDeleted",
+                "isPostSpam",
+                "matchPercent",
+                "postDeleted"
+            )
+            .withColumnRenamed("selftext", "body")
+            .withColumnRenamed("id", "post_key")
+            .distinct()
         )
 
+        if existDPost is not None:
+            newPosts = newPosts.join(
+                existDPost.select("post_key"),
+                newPosts["post_key"] == existDPost["post_key"],
+                "left_anti"
+            )
 
-        dimPost=(dimJoinRaw.withColumn("postStatus",
-                                         F.when(F.col("accDeleted")==True, F.lit("AuthorDeleted"))
-                                          .when((F.col ("postDeleted")==True) & (F.col("accDeleted")==False), F.lit("SelfDeleted"))
-                                         .when(F.col("deleted_by_mod")==True, F.lit("ModDeleted"))
-                                         .when(F.col("deleted_by_auto")==True, F.lit("AutoDeleted"))
-                                            .otherwise(F.lit("active")))
-                                .withColumnRenamed("selftext", "body")
-                                .drop("deleted_by_mod", "deleted_by_auto")
-                                        .withColumnRenamed("id", "post_key"))
-        
-
-
-        return dimPost
+        return newPosts
     
-    def createDimComment(self, existingCmt=None, dfSubNew, dfCmtNew):
-        dfCmt=dfCmtNew
-        dimComment=(dfCmt.select(F.col("id"), F.col("body"), F.col("permalink")
+
+    
+
+    
+    def updateDimPostStatus(self, dimPostExist=None, dfCmtNew=None):
+        dfCmtFlag = (
+            dfCmtNew
+            .filter((F.col("deleted_by_mod") == True) | (F.col("deleted_by_auto") == True))
+            .dropDuplicates(["link_clean"])
+        )
+
+        dimJoinRaw = (
+            dimPostExist.alias("p")
+            .join(dfCmtFlag.alias("c"), F.col("p.post_key") == F.col("c.link_clean"), "left")
+            .select(
+                "p.post_key",
+                "p.title",
+                "p.body",
+                "p.permalink",
+                "p.url",
+                "p.domain",
+                "p.edited",
+                "p.locked",
+                "p.spoiler",
+                "p.over_18",
+                "p.stickied",
+                "p.is_original_content",
+                "p.link_flair_text",
+                "p.accDeleted",
+                "p.isPostSpam",
+                "p.matchPercent",
+                "p.postDeleted",
+                "c.deleted_by_mod",
+                "c.deleted_by_auto"
+            )
+            .distinct()
+        )
+
+        return (
+            dimJoinRaw.withColumn(
+                "postStatus",
+                F.when(F.col("accDeleted") == True, F.lit("AuthorDeleted"))
+                .when((F.col("postDeleted") == True) & (F.col("accDeleted") == False), F.lit("SelfDeleted"))
+                .when(F.col("deleted_by_mod") == True, F.lit("ModDeleted"))
+                .when(F.col("deleted_by_auto") == True, F.lit("AutoDeleted"))
+                .otherwise(F.lit("Active"))
+            )
+            .drop("deleted_by_mod", "deleted_by_auto")
+        )
+
+    
+    def createDimComment(self, existingCmt=None, dfCmtNew=None):
+        dimComment=(dfCmtNew.select(F.col("id"), F.col("body"), F.col("permalink")
                                          , F.col("edited"), F.col("is_submitter")
-                                         , F.col("controversiality"))
+                                         , F.col("controversiality"),
+                                         F.col("parent_clean"),
+                                         F.col("link_clean"),
+                                         F.col("deleted_by_mod"),
+                                         F.col("deleted_by_auto"))
                                         # , F.col("sentiment_label"))
                                 .withColumnRenamed("id", "comment_key"))
         if existingCmt is not None:
@@ -152,8 +205,16 @@ class GoldTransformer(BaseTransformer):
 
 
 
-    def createFactPostActivity(self,dimTime, dimAuthor, dimSubreddit, dimPostType, dimSentiment, dfSubNew, dfCmtNew):
+    def createFactPostActivity(self,dimTime, dimAuthor, dimSubreddit, dimPostType, dimSentiment, dimCmt, dfSubNew):
         
+        dfCmtFlag = (
+            dimCmt
+            .filter((F.col("deleted_by_mod") == True) | (F.col("deleted_by_auto") == True))
+            .dropDuplicates(["link_clean"])
+        )
+
+
+              
         dfSub = (dfSubNew
             .withColumn("text", F.concat_ws(" ", F.col("title"), F.col("selftext")))
             .withColumn("sentiment_label", sentimentUdf(F.col("text")))
@@ -164,8 +225,32 @@ class GoldTransformer(BaseTransformer):
                                                 col("score"), col("num_comments"),
                                                col("total_awards_received"),
                                                col("sentiment_label"),
+                                               col("accDeleted"),
+                                               col("postDeleted"),
                                               col("subreddit_subscribers")))
         
+        dfPostActi = (
+            dfPostActi
+            .join(
+                dfCmtFlag,    
+                dfPostActi["id"] == dfCmtFlag["link_clean"], 
+                "left"                
+            )
+            .select(
+                dfPostActi["*"],  
+                dfCmtFlag["deleted_by_mod"],
+                dfCmtFlag["deleted_by_auto"]
+            )
+            .withColumn(
+                "postStatus",
+                F.when(F.col("accDeleted") == True, F.lit("AuthorDeleted"))
+                .when((F.col("postDeleted") == True) & (F.col("accDeleted") == False), F.lit("SelfDeleted"))
+                .when(F.col("deleted_by_mod") == True, F.lit("ModDeleted"))
+                .when(F.col("deleted_by_auto") == True, F.lit("AutoDeleted"))
+                .otherwise(F.lit("Active"))
+            )
+            .drop("deleted_by_mod", "deleted_by_auto"))
+
         factActi=dfPostActi.join(dimTime, dimTime.time_key==dfPostActi.createdDate,
                                  "left").drop("createdDate")
         factActi=factActi.join(dimAuthor, dimAuthor.author_key==factActi.author_fullname,
@@ -178,12 +263,12 @@ class GoldTransformer(BaseTransformer):
 
         factActi = (factActi.select(
             F.col("id"), col("time_key"), col("sentiment_key"), col("author_key"),col("subreddit_key"),col("postType_key"),
-           col("score"),col("num_comments"),col("total_awards_received"),col("subreddit_subscribers"))
+           col("score"),col("num_comments"),col("total_awards_received"),col("subreddit_subscribers"), col("postStatus"))
             .withColumnRenamed("id", "post_key")
             .withColumn("id", expr("uuid()")))
         return factActi
         
-    def createFactCommentActivity(self, dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment, dfSubNew, dfCmtNew):
+    def createFactCommentActivity(self, dimTime, dimAuthor, dimSubreddit, dimPost, dimSentiment, dfCmtNew):
          
         dfCmt = dfCmtNew.withColumn(
             "sentiment_label", sentimentUdf(F.col("body"))
