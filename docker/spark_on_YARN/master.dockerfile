@@ -4,9 +4,9 @@ USER sparkuser
 WORKDIR /home/sparkuser
 
 
-COPY config/spark_on_YARN/master/hdfs-site.xml hadoop/etc/hadoop/hdfs-site.xml
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/master/hdfs-site.xml hadoop/etc/hadoop/hdfs-site.xml
 
-COPY config/spark_on_YARN/master/workers hadoop/etc/hadoop/workers
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/master/workers hadoop/etc/hadoop/workers
 
 USER sparkuser
 
