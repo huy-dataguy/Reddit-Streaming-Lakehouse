@@ -8,7 +8,7 @@ SUPERSET_ADMIN_EMAIL="admin@example.com"
 TRINO_CONN_NAME="Trino"
 TRINO_CONN_URI="trino://admin@trino-coordinator:8080/iceberg"
 
-EXPORT_ZIP_PATH="./dashboard/my_dashboard.zip"  
+EXPORT_ZIP_PATH="./dashboard/redditdashboard.zip"  
 
 echo "=== Thiết lập Superset ==="
 
@@ -58,10 +58,10 @@ if [ -f "$EXPORT_ZIP_PATH" ]; then
     fi
 
     echo "=== Import dashboards sau ==="
-    docker cp "$EXPORT_ZIP_PATH" $SUPERSET_CONTAINER:/tmp/my_dashboard.zip
+    docker cp "$EXPORT_ZIP_PATH" $SUPERSET_CONTAINER:/tmp/redditdashboard.zip
     docker exec -it $SUPERSET_CONTAINER sh -c "
         superset import-dashboards \
-            --path /tmp/my_dashboard.zip \
+            --path /tmp/redditdashboard.zip \
             --username $SUPERSET_ADMIN_USER
     "
 else

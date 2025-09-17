@@ -47,6 +47,7 @@ databases:
             type: BOOLEAN
             groupby: true
             filterable: true
+      
       - table_name: dimpost_view
         schema: gold
         columns:
@@ -114,6 +115,7 @@ databases:
             type: BOOLEAN
             groupby: true
             filterable: true
+    
       - table_name: dimposttype_view
         schema: gold
         columns:
@@ -121,6 +123,7 @@ databases:
             type: STRING
             groupby: true
             filterable: true
+    
       - table_name: dimsentiment_view
         schema: gold
         columns:
@@ -128,6 +131,7 @@ databases:
             type: BIGINT
             groupby: true
             filterable: true
+      
       - table_name: dimsubreddit_view
         schema: gold
         columns:
@@ -143,6 +147,7 @@ databases:
             type: STRING
             groupby: true
             filterable: true
+     
       - table_name: dimtime_view
         schema: gold
         columns:
@@ -174,6 +179,48 @@ databases:
             type: BIGINT
             groupby: true
             filterable: true
+    
+      - table_name: factcmtactivity_view
+        schema: gold
+        columns:
+          - column_name: time_key
+            type: TIMESTAMP
+            groupby: true
+            filterable: true
+            is_dttm: true
+          - column_name: author_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: sentiment_key
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: subreddit_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: post_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: score
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: controversiality
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: total_awards_received
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: id
+            type: STRING
+            groupby: true
+            filterable: true
+      
       - table_name: factpostactivity_view
         schema: gold
         columns:
@@ -222,3 +269,4 @@ databases:
             type: STRING
             groupby: true
             filterable: true
+    
