@@ -64,6 +64,7 @@ RUN echo 'export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native'>>~/.bashr
 RUN echo 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"'>>~/.bashrc
 
 RUN echo 'export SPARK_DIST_CLASSPATH="$(hadoop classpath)"'>>~/.bashrc
+RUN bash -c "sed -i '/# If not running interactively, don'\''t do anything/,/esac/ s/^/#/' ~/.bashrc"
 
 
 CMD ["/bin/bash"]
