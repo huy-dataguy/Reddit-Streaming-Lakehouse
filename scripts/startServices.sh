@@ -21,13 +21,7 @@ curl -Lf 'https://airflow.apache.org/docs/apache-airflow/3.0.6/docker-compose.ya
 
 wait
 
-mkdir -p ../config/airflow/dags ../config/airflow/logs ../config/airflow/plugins ../config/airflow/config
-export AIRFLOW_PROJ_DIR="../config/airflow"
-AIRFLOW_BASE="../config/airflow"
-echo -e "AIRFLOW_UID=$(id -u)" > "$AIRFLOW_BASE/.env"
-
-
-
+source ../scripts/editAirflow.sh
 # 4. start container
 echo "starting all services..."
 docker compose -f spark.compose.yml up -d &
@@ -39,6 +33,10 @@ docker compose -f trino.compose.yaml up -d &
 docker compose -f airflow.compose.yaml up -d
 
 wait
+
+docker exec -u sparkuser master bash -lc "start-dfs.sh"
+docker exec -u sparkuser master bash -lc "start-yarn.sh"
+sleep 20
 
 echo "All services have been started successfully"
 
