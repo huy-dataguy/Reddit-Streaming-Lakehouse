@@ -1,7 +1,10 @@
 FROM ubuntu:noble
 
+RUN echo "root:root" | chpasswd
+
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip python3-venv
+    apt-get install -y wget -y openjdk-17-jdk vim ssh openssh-server telnet iputils-ping net-tools  python3 python3-pip python3-venv
+
 
 RUN python3 -m venv /opt/venv
 
@@ -15,4 +18,10 @@ RUN useradd -m confluent_kafka_user && \
 USER confluent_kafka_user
 WORKDIR /home/confluent_kafka_user
 
-CMD ["/bin/bash"]
+
+COPY config/kafka_cluster/entrypoint2.sh entrypoint.sh
+USER root
+WORKDIR /home/confluent_kafka_user
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
