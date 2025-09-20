@@ -35,7 +35,8 @@ ENV KAFKA_CLUSTER_ID=Q_6ATv-PTJGaFkf27OW8Bg
 
 
 # Append rsa_pub to authorized_keys 
-RUN cat config/.ssh/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys
+# RUN cat config/.ssh/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys
+COPY --chown=kafka_user:kafka_user config/.ssh/* /home/kafka_user/.ssh/
 
 COPY config/kafka_cluster/entrypoint.sh entrypoint.sh
 USER root
