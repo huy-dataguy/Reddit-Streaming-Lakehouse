@@ -227,3 +227,5 @@ streaming/
 utils.zip
 uteStreaming/
 superset_import_tmp/
+airflow.compose.yaml
+.ssh/
