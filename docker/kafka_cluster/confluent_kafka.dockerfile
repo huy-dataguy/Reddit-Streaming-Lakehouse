@@ -18,6 +18,8 @@ RUN useradd -m confluent_kafka_user && \
 USER confluent_kafka_user
 WORKDIR /home/confluent_kafka_user
 
+# Append rsa_pub to authorized_keys 
+RUN cat config/.ssh/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys
 
 COPY config/kafka_cluster/entrypoint2.sh entrypoint.sh
 USER root
