@@ -66,5 +66,7 @@ RUN echo 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"'>>~/.
 RUN echo 'export SPARK_DIST_CLASSPATH="$(hadoop classpath)"'>>~/.bashrc
 RUN bash -c "sed -i '/# If not running interactively, don'\''t do anything/,/esac/ s/^/#/' ~/.bashrc"
 
+# Append rsa_pub to authorized_keys 
+RUN cat config/.ssh/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys
 
 CMD ["/bin/bash"]
