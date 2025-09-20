@@ -34,6 +34,18 @@ docker compose -f airflow.compose.yaml up -d
 
 wait
 
+
+# Append rsa_id rsa_pub to airflow
+docker exec -u airflow docker-airflow-worker bash -c "mkdir ~/.ssh"
+docker exec -u airflow docker-airflow-worker bash -c "touch ~/.ssh/id_rsa"
+docker exec -u airflow docker-airflow-worker bash -c "touch ~/.ssh/id_rsa.pub"
+
+docker cp ../config/.ssh/id_rsa docker-airflow-worker:/tmp/id_rsa
+docker exec -u airflow airflow-worker bash -c "cat /tmp/id_rsa >> ~/.ssh/id_rsa"
+
+docker cp ../config/.ssh/id_rsa.pub docker-airflow-worker:/tmp/id_rsa.pub
+docker exec -u airflow airflow-worker bash -c "cat /tmp/id_rsa.pub >> ~/.ssh/id_rsa.pub"
+
 docker exec -u sparkuser master bash -lc "start-dfs.sh"
 docker exec -u sparkuser master bash -lc "start-yarn.sh"
 sleep 20
