@@ -15,4 +15,10 @@ COPY --chown=sparkuser:sparkuser config/spark_on_YARN/client/spark-defaults.conf
 
 
 # Start SSH and Hadoop services
-CMD ["/bin/bash", "-c", "service ssh start && su - spark-user && bash"]
+# CMD ["/bin/bash", "-c", "service ssh start && su - spark-user && bash"]
+
+USER root
+COPY config/spark_on_YARN/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT [ "/entrypoint.sh" ]

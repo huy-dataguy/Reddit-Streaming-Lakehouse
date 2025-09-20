@@ -8,3 +8,9 @@ fi
 #run
 ./kafka/bin/kafka-server-start.sh ./kafka/config/kraft/server.properties
 
+
+service ssh start
+
+exec su kafka_user bash -c "tail -F anything"
+
+

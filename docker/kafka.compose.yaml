@@ -61,8 +61,8 @@ services:
 
   confluent_kafka:
     build:
-      context: ./kafka_cluster
-      dockerfile: confluent_kafka.dockerfile
+      context: ../
+      dockerfile: docker/kafka_cluster/confluent_kafka.dockerfile
     hostname: confluent_kafka
     networks:
       - reddit_network
