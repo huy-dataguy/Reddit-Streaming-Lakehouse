@@ -2,10 +2,7 @@ from airflow import DAG
 from airflow.providers.ssh.operators.ssh import SSHOperator
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
-import os
-from pymongo import MongoClient
-import certifi
-from dotenv import load_dotenv
+
 
 default_args = {
     'owner': 'airflow',
@@ -20,7 +17,7 @@ dag = DAG(
     'reddit_streaming_pipeline',
     default_args=default_args,
     description='Streaming Reddit -> Kafka -> Lakehouse -> Superset',
-    start_date=datetime(2026, 1, 1),
+    start_date=datetime(2004, 1, 1),
     catchup=False,
     schedule_interval=None,
 )
@@ -54,7 +51,7 @@ createTopic = SSHOperator(
 
 # delete checkpoint in mongodb to track which lines have been processed into kafka
 deleteCheckpointMongoDB = SSHOperator(
-    task_id='delete _checkpoint',
+    task_id='delete_checkpoint',
     ssh_conn_id='ssh_confluent_kafka',
     command="bash -lc 'source /opt/venv/bin/activate && python scripts/delAllDocument.py'",
     dag=dag,
@@ -62,7 +59,7 @@ deleteCheckpointMongoDB = SSHOperator(
 
 # create database, create dim table
 
-sshClientCreateBronze = SSHOperator(
+createBronzeDB = SSHOperator(
     task_id='create_bronze_db',
     ssh_conn_id='ssh_spark_client',
     command="bash -lc 'spark-sql -e \"CREATE DATABASE IF NOT EXISTS spark_catalog.bronze\"'",
@@ -70,7 +67,7 @@ sshClientCreateBronze = SSHOperator(
     cmd_timeout=600,
 )
 
-sshClientCreateSilver = SSHOperator(
+createSilverDB = SSHOperator(
     task_id='create_silver_db',
     ssh_conn_id='ssh_spark_client',
     command="bash -lc 'spark-sql -e \"CREATE DATABASE IF NOT EXISTS spark_catalog.silver\"'",
@@ -78,7 +75,7 @@ sshClientCreateSilver = SSHOperator(
     cmd_timeout=600,
 )
 
-sshClientCreateGold = SSHOperator(
+createGoldDB = SSHOperator(
     task_id='create_gold_db',
     ssh_conn_id='ssh_spark_client',
     command="bash -lc 'spark-sql -e \"CREATE DATABASE IF NOT EXISTS spark_catalog.gold\"'",
@@ -87,7 +84,7 @@ sshClientCreateGold = SSHOperator(
 )
 
 
-sshClientCreateDimTbl = SSHOperator(
+createDimTblGold = SSHOperator(
     task_id='create_dim_gold',
     ssh_conn_id='ssh_spark_client',
     command="bash -lc 'cd ~/spark_submit && spark-submit --py-files transformer.zip,utils.zip createDim.py'",
@@ -158,11 +155,11 @@ submitGoldFact = SSHOperator(
 
 
 # Start DFS/YARN, Kafka topics, delete checkpoints, producer
-startDFS >> startYARN >> createTopic >> deleteCheckpointMongoDB >> produceData
+startDFS >> startYARN >> createTopic >> deleteCheckpointMongoDB >> [createBronzeDB, createSilverDB, createGoldDB] >> createDimTblGold
 
 # Producer,submit streaming jobs (Bronze,Silver,Gold in parallel)
-produceData >> sshBronzeSubmit
-sshBronzeSubmit >> [submitSilverSub, submitSilverCmt, submitGoldDim, submitGoldFact]
+createDimTblGold >> produceData >> sshBronzeSubmit
+sshBronzeSubmit >> [submitSilverSub, submitSilverCmt] >> submitGoldDim >> submitGoldFact
 
 # Refresh Superset
 # [submitSilverSub, submitSilverCmt, submitGoldDim, submitGoldFact] >> ssh_superset_refresh
