@@ -96,8 +96,10 @@ createDimTblGold = SSHOperator(
 # produver mongodb to kafka cluster
 produceData = SSHOperator(
     task_id='run_producer',
-    ssh_conn_id='ssh_kafka',
-    command="bash -lc 'source /opt/venv/bin/activate && python scripts/producer.py'",
+    ssh_conn_id='ssh_confluent_kafka',
+    # command="bash -lc 'source /opt/venv/bin/activate && python scripts/producer.py'",
+    command="nohup bash -lc 'source /opt/venv/bin/activate && python scripts/producer.py' > /tmp/producer.log 2>&1 &",
+
     dag=dag,
     do_xcom_push=False
 )
@@ -155,7 +157,7 @@ submitGoldFact = SSHOperator(
 
 
 # Start DFS/YARN, Kafka topics, delete checkpoints, producer
-startDFS >> startYARN >> createTopic >> deleteCheckpointMongoDB >> [createBronzeDB, createSilverDB, createGoldDB] >> createDimTblGold
+deleteCheckpointMongoDB >> createTopic >> startDFS >> startYARN >> [createBronzeDB, createSilverDB, createGoldDB] >> createDimTblGold
 
 # Producer,submit streaming jobs (Bronze,Silver,Gold in parallel)
 createDimTblGold >> produceData >> sshBronzeSubmit
