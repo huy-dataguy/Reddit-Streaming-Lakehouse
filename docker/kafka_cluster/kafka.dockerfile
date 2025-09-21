@@ -13,6 +13,7 @@ RUN echo "kafka_user:kafka" | chpasswd
 USER kafka_user
 
 WORKDIR /home/kafka_user
+
 # password
 
 RUN wget https://dlcdn.apache.org/kafka/3.7.2/kafka_2.13-3.7.2.tgz
@@ -32,6 +33,7 @@ RUN echo 'KAFKA_CLUSTER_ID="Q_6ATv-PTJGaFkf27OW8Bg"' >> ~/.bashrc
 # Set environment for entrypoint script
 
 ENV KAFKA_CLUSTER_ID=Q_6ATv-PTJGaFkf27OW8Bg
+RUN bash -c "sed -i '/# If not running interactively, don'\''t do anything/,/esac/ s/^/#/' ~/.bashrc"
 
 
 # Append rsa_pub to authorized_keys 

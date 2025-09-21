@@ -29,6 +29,7 @@ COPY --chown=confluent_kafka_user:confluent_kafka_user config/ssh/* /home/conflu
 #     chmod 644 /home/confluent_kafka_user/.ssh/id_rsa.pub && \
 #     chmod 600 /home/confluent_kafka_user/.ssh/authorized_keys && \
 #     chown -R confluent_kafka_user:confluent_kafka_user /home/confluent_kafka_user/.ssh
+RUN bash -c "sed -i '/# If not running interactively, don'\''t do anything/,/esac/ s/^/#/' ~/.bashrc"
 
 
 USER root
