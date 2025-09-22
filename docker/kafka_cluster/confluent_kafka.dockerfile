@@ -19,11 +19,22 @@ USER confluent_kafka_user
 WORKDIR /home/confluent_kafka_user
 
 # Append rsa_pub to authorized_keys 
-RUN cat config/.ssh/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys
+# RUN cat config/.ssh/id_rsa.pub >> /home/confluent_kafka_user/.ssh/authorized_keys
 
-COPY config/kafka_cluster/entrypoint2.sh entrypoint.sh
+COPY --chown=confluent_kafka_user:confluent_kafka_user config/ssh/* /home/confluent_kafka_user/.ssh/
+
+# USER root
+# RUN chmod 700 /home/confluent_kafka_user/.ssh && \
+#     chmod 600 /home/confluent_kafka_user/.ssh/id_rsa && \
+#     chmod 644 /home/confluent_kafka_user/.ssh/id_rsa.pub && \
+#     chmod 600 /home/confluent_kafka_user/.ssh/authorized_keys && \
+#     chown -R confluent_kafka_user:confluent_kafka_user /home/confluent_kafka_user/.ssh
+RUN bash -c "sed -i '/# If not running interactively, don'\''t do anything/,/esac/ s/^/#/' ~/.bashrc"
+
+
 USER root
-WORKDIR /home/confluent_kafka_user
-RUN chmod +x entrypoint.sh
+COPY config/kafka_cluster/entrypoint2.sh /entrypoint.sh
 
-ENTRYPOINT ["./entrypoint.sh"]
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

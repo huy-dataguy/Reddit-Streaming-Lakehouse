@@ -47,7 +47,6 @@ databases:
             type: BOOLEAN
             groupby: true
             filterable: true
-      
       - table_name: dimpost_view
         schema: gold
         columns:
@@ -115,7 +114,6 @@ databases:
             type: BOOLEAN
             groupby: true
             filterable: true
-    
       - table_name: dimposttype_view
         schema: gold
         columns:
@@ -123,7 +121,6 @@ databases:
             type: STRING
             groupby: true
             filterable: true
-    
       - table_name: dimsentiment_view
         schema: gold
         columns:
@@ -131,7 +128,6 @@ databases:
             type: BIGINT
             groupby: true
             filterable: true
-      
       - table_name: dimsubreddit_view
         schema: gold
         columns:
@@ -147,7 +143,6 @@ databases:
             type: STRING
             groupby: true
             filterable: true
-     
       - table_name: dimtime_view
         schema: gold
         columns:
@@ -179,7 +174,6 @@ databases:
             type: BIGINT
             groupby: true
             filterable: true
-    
       - table_name: factcmtactivity_view
         schema: gold
         columns:
@@ -220,7 +214,6 @@ databases:
             type: STRING
             groupby: true
             filterable: true
-      
       - table_name: factpostactivity_view
         schema: gold
         columns:
@@ -269,4 +262,3 @@ databases:
             type: STRING
             groupby: true
             filterable: true
-    

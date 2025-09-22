@@ -111,7 +111,7 @@ def producerRS_RC(postColl, cmtColl, rsrcTopic, config, checkpointColl, mongoDB)
 
         else:
             print("No new posts/comments... waiting...")
-        time.sleep(1)
+        time.sleep(5)
 
     producer.flush()
 

@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
-
-# =============================
-# Cấu hình
-# =============================
+#config
 TRINO_CONTAINER="trino-coordinator"   
 TRINO_HOST="trino-coordinator"        
 TRINO_PORT="8080"
@@ -13,9 +10,7 @@ TRINO_USER="admin"
 
 YAML_OUTPUT="reddit_dataset.yaml"
 
-# =============================
-# Map kiểu dữ liệu từ Trino sang Superset
-# =============================
+# map data type from trino to superset
 map_data_type() {
     local trino_type="$1"
     trino_type=$(echo "$trino_type" | tr '[:upper:]' '[:lower:]')
@@ -30,10 +25,8 @@ map_data_type() {
     esac
 }
 
-# =============================
-# Lấy danh sách bảng
-# =============================
-echo "=== Lấy danh sách bảng từ Trino ==="
+# get tables
+echo "get table from Trino"
 TABLES=$(docker exec -i ${TRINO_CONTAINER} trino \
   --server ${TRINO_HOST}:${TRINO_PORT} \
   --catalog ${CATALOG} \
@@ -43,13 +36,10 @@ TABLES=$(docker exec -i ${TRINO_CONTAINER} trino \
   --execute "SHOW TABLES" \
   | grep -v -E "Table|----|^$")
 
-echo "Đã tìm thấy các bảng:"
+echo "found table:"
 echo "$TABLES"
-echo "=============================="
 
-# =============================
-# Khởi tạo YAML mới
-# =============================
+# init yaml
 rm -f "$YAML_OUTPUT"
 {
   echo "databases:"
@@ -57,12 +47,10 @@ rm -f "$YAML_OUTPUT"
   echo "    tables:"
 } >> "$YAML_OUTPUT"
 
-# =============================
-# Tạo view và ghi YAML
-# =============================
+# create view and record view
 for TABLE in $TABLES; do
     VIEW_NAME="${TABLE}_view"
-    echo "Tạo view: $VIEW_NAME"
+    echo "create view: $VIEW_NAME"
 
     docker exec -i ${TRINO_CONTAINER} trino \
       --server ${TRINO_HOST}:${TRINO_PORT} \
@@ -71,7 +59,7 @@ for TABLE in $TABLES; do
       --user ${TRINO_USER} \
       --execute "CREATE OR REPLACE VIEW ${VIEW_NAME} AS SELECT * FROM ${TABLE}"
 
-    # Lấy danh sách cột + kiểu dữ liệu
+    #get columns and data type
     COLUMNS_INFO=$(docker exec -i ${TRINO_CONTAINER} trino \
       --output-format=TSV \
       --server ${TRINO_HOST}:${TRINO_PORT} \
@@ -99,4 +87,4 @@ for TABLE in $TABLES; do
     done <<< "$COLUMNS_INFO"
 done
 
-echo " Hoàn tất! File YAML: $YAML_OUTPUT"
+echo " success File YAML: $YAML_OUTPUT"
