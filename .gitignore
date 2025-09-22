@@ -222,3 +222,11 @@ data_raw/
 Tips.md
 transformer.zip
 test.txt
+trino-plugin/
+streaming/
+utils.zip
+uteStreaming/
+superset_import_tmp/
+.ssh/
+logs/
+plugins/

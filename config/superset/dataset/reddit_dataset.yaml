@@ -1,0 +1,264 @@
+databases:
+  - database_name: Trino
+    tables:
+      - table_name: dimauthor_view
+        schema: gold
+        columns:
+          - column_name: author_key
+            type: STRING
+            groupby: true
+            filterable: true
+      - table_name: dimcomment_view
+        schema: gold
+        columns:
+          - column_name: body
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: permalink
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: edited
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: is_submitter
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: controversiality
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: parent_clean
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: link_clean
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: deleted_by_mod
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: deleted_by_auto
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+      - table_name: dimpost_view
+        schema: gold
+        columns:
+          - column_name: title
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: body
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: permalink
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: url
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: domain
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: edited
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: locked
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: spoiler
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: over_18
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: stickied
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: is_original_content
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: link_flair_text
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: accdeleted
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: ispostspam
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+          - column_name: matchpercent
+            type: DOUBLE
+            groupby: true
+            filterable: true
+          - column_name: postdeleted
+            type: BOOLEAN
+            groupby: true
+            filterable: true
+      - table_name: dimposttype_view
+        schema: gold
+        columns:
+          - column_name: posttype_key
+            type: STRING
+            groupby: true
+            filterable: true
+      - table_name: dimsentiment_view
+        schema: gold
+        columns:
+          - column_name: sentiment_key
+            type: BIGINT
+            groupby: true
+            filterable: true
+      - table_name: dimsubreddit_view
+        schema: gold
+        columns:
+          - column_name: subreddit
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: subreddit_name_prefixed
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: subreddit_type
+            type: STRING
+            groupby: true
+            filterable: true
+      - table_name: dimtime_view
+        schema: gold
+        columns:
+          - column_name: year
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: month
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: day
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: hour
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: minute
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: second
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: day_of_week
+            type: BIGINT
+            groupby: true
+            filterable: true
+      - table_name: factcmtactivity_view
+        schema: gold
+        columns:
+          - column_name: time_key
+            type: TIMESTAMP
+            groupby: true
+            filterable: true
+            is_dttm: true
+          - column_name: author_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: sentiment_key
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: subreddit_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: post_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: score
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: controversiality
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: total_awards_received
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: id
+            type: STRING
+            groupby: true
+            filterable: true
+      - table_name: factpostactivity_view
+        schema: gold
+        columns:
+          - column_name: time_key
+            type: TIMESTAMP
+            groupby: true
+            filterable: true
+            is_dttm: true
+          - column_name: sentiment_key
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: author_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: subreddit_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: posttype_key
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: score
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: num_comments
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: total_awards_received
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: subreddit_subscribers
+            type: BIGINT
+            groupby: true
+            filterable: true
+          - column_name: poststatus
+            type: STRING
+            groupby: true
+            filterable: true
+          - column_name: id
+            type: STRING
+            groupby: true
+            filterable: true

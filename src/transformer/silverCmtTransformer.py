@@ -31,12 +31,11 @@ class CommentTransformer(BaseTransformer):
             newColAutoMod,
             F.col(authorCol) == "AutoModerator"
         )
-    def transform(self,pathIn, pathOut, format="iceberg", checkpointPath=None, mode="append", streaming=False):
-        df = self.readData(pathIn, format)
+    def transform(self,df):
         df = self.convertTimestamp(df)
         df = self.markAuthorDeleted(df) 
         df = self.markBodyRemoved(df, body="body", newCol="cmtDeleted")
         df = self.normalizeParentId(df)
         df = self.normalizeLinkId(df)
         df = self.markModComments(df)
-        self.writeData(df=df, pathOut=pathOut)
+        return df

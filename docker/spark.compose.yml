@@ -23,7 +23,6 @@ services:
     ports:
       - 9004:9004
       - 9870:9870
-      - 8080:8080
     image: master
     hostname: hadoopmaster
     networks:

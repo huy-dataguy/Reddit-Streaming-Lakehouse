@@ -1,0 +1,20 @@
+services:
+  superset:
+    image: apache/superset:3.1.2
+    container_name: superset
+    ports:
+      - "8088:8088" 
+    volumes:
+      - ../config/superset/dataset:/app/superset_config/dataset
+    networks:
+      - reddit_network
+    environment:
+      - SUPERSET_SECRET_KEY=your_secure_secret_key 
+      - SUPERSET_FEATURE_EMBEDDED_SUPERSET=true
+
+
+networks:
+  reddit_network:
+    driver: bridge
+    name: reddit_network
+    external: true 

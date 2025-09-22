@@ -28,15 +28,20 @@ RUN curl -s "https://get.sdkman.io" | bash && \
     echo 'source "/home/sparkuser/.sdkman/bin/sdkman-init.sh"' >> /home/sparkuser/.bashrc && \
     bash -c "source /home/sparkuser/.sdkman/bin/sdkman-init.sh && sdk install scala 2.13.16"
 
-RUN mkdir -p /home/sparkuser/.ssh && \
-    ssh-keygen -t rsa -P '' -f /home/sparkuser/.ssh/id_rsa && \
-    cat /home/sparkuser/.ssh/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys && \
-    chmod 600 /home/sparkuser/.ssh/authorized_keys && \
-    chown -R sparkuser:sparkuser /home/sparkuser/.ssh
+# RUN mkdir -p /home/sparkuser/.ssh && \
+#     ssh-keygen -t rsa -P '' -f /home/sparkuser/.ssh/id_rsa && \
+#     cat /home/sparkuser/.ssh/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys && \
+#     chmod 600 /home/sparkuser/.ssh/authorized_keys && \
+#     chown -R sparkuser:sparkuser /home/sparkuser/.ssh
     
-COPY config/spark_on_YARN/base/core-site.xml hadoop/etc/hadoop/core-site.xml
-COPY config/spark_on_YARN/base/yarn-site.xml hadoop/etc/hadoop/yarn-site.xml
-COPY config/spark_on_YARN/base/mapred-site.xml hadoop/etc/hadoop/mapred-site.xml
+# COPY config/spark_on_YARN/base/core-site.xml hadoop/etc/hadoop/core-site.xml
+# COPY config/spark_on_YARN/base/yarn-site.xml hadoop/etc/hadoop/yarn-site.xml
+# COPY config/spark_on_YARN/base/mapred-site.xml hadoop/etc/hadoop/mapred-site.xml
+
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/base/core-site.xml hadoop/etc/hadoop/core-site.xml
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/base/yarn-site.xml hadoop/etc/hadoop/yarn-site.xml
+COPY --chown=sparkuser:sparkuser config/spark_on_YARN/base/mapred-site.xml hadoop/etc/hadoop/mapred-site.xml
+
 RUN echo 'export HADOOP_HOME=/home/sparkuser/hadoop'>>~/.bashrc
 RUN echo 'export SPARK_HOME=/home/sparkuser/spark'>>~/.bashrc
 
@@ -59,6 +64,14 @@ RUN echo 'export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native'>>~/.bashr
 RUN echo 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"'>>~/.bashrc
 
 RUN echo 'export SPARK_DIST_CLASSPATH="$(hadoop classpath)"'>>~/.bashrc
+RUN bash -c "sed -i '/# If not running interactively, don'\''t do anything/,/esac/ s/^/#/' ~/.bashrc"
+
+# Append rsa_pub to authorized_keys 
+COPY --chown=sparkuser:sparkuser config/ssh/* /home/sparkuser/.ssh/
+
+# COPY --chown=sparkuser:sparkuser config/.ssh/id_rsa.pub /tmp/id_rsa.pub
+# RUN cat /tmp/id_rsa.pub >> /home/sparkuser/.ssh/authorized_keys
+    # && chown -R sparkuser:sparkuser /home/sparkuser/.ssh
 
 
 CMD ["/bin/bash"]

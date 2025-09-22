@@ -1,83 +1,127 @@
 #!/usr/bin/env python
 
-from random import choice
 from confluent_kafka import Producer
-
+from pymongo import MongoClient
+from bson import ObjectId
 import json
 import time
+import os
+import certifi
+from dotenv import load_dotenv
 
-# Optional per-message delivery callback (triggered by poll() or flush())
-# when a message has been successfully delivered or permanently
-# failed delivery (after retries).
+
+load_dotenv("/home/confluent_kafka_user/scripts/.env")
+# connect mongodb 
+MONGODB_URI = os.getenv("MONGODB_URI")
+client = MongoClient(
+    MONGODB_URI,
+    tls=True,
+    tlsCAFile=certifi.where()
+)
+mongoDB = client["reddit_db"]
+postColl = mongoDB["posts"]
+cmtColl = mongoDB["comments"]
+
+checkpointColl = "kafka_checkpoints"
+
+#check each successful produce to ensure no data loss on restart
+def getLastCheckpoint(mongoDB, checkpointColl, source):
+    checkpoint = mongoDB[checkpointColl].find_one(
+        {"source": source}, sort=[("_id", -1)]
+    )
+    if checkpoint:
+        return checkpoint.get("last_id"), checkpoint.get("cnt", 0)
+    return None, 0
+
+
+# save status, save the location of the record loaded into kafka
+
+def saveCheckpoint(mongoDB, checkpointColl, last_id, source, cnt):
+    mongoDB[checkpointColl].insert_one({
+        "source": source,
+        "last_id": last_id,
+        "cnt": cnt,
+        "timestamp": time.time()
+    })
+
+
 def deliveryCallback(err, msg):
-        if err:
-            print('ERROR: Message failed delivery: {}'.format(err))
-        else:
-            print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
-                topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
+    if err:
+        print(f"ERROR: Message failed delivery: {err}")
+    else:
+        print(f"Produced event to topic {msg.topic()}: key={msg.key().decode()}")
 
-def readOneLineJson(file):
-    line = file.readline()
-    return json.loads(line)
-        
+#read one record
+def readRecord(cursor):
+    try:
+        return next(cursor)
+    except StopIteration:
+        return None
 
-def producerRS_RC (url, topic, config):
+
+
+#sending each post, comment to its respective Kafka topic.
+def producerRS_RC(postColl, cmtColl, rsrcTopic, config, checkpointColl, mongoDB):
 
     producer = Producer(config)
+
+    # checkpoint cho posts
+    lastIdPost, cntSub = getLastCheckpoint(mongoDB, checkpointColl, "posts")
+
+
     
-    cntSub = 0
-    cntCom = 0
-    # with open('src/data/RS_reddit.jsonl', 'r') as f:
+    queryPost = {"_id": {"$gt": ObjectId(lastIdPost)}} if lastIdPost else {}
+    cursorPost = postColl.find(queryPost).sort("_id", 1)
 
-    with open(f'{url[0]}', 'r') as fRS, open(f'{url[1]}', 'r') as fRC:
+    # checkpoint cho comments
+    lastIdCmt, cntCom = getLastCheckpoint(mongoDB, checkpointColl, "comments")
 
-        oneSub = readOneLineJson(fRS)
-        oneCom = readOneLineJson(fRC)
+    queryCmt = {"_id": {"$gt": ObjectId(lastIdCmt)}} if lastIdCmt else {}
+    cursorComment = cmtColl.find(queryCmt).sort("_id", 1)
 
+    oneSub = readRecord(cursorPost)
+    oneCom = readRecord(cursorComment)
 
-        while(True):
-            
-            if oneSub and (not oneCom or oneSub['created_utc'] <= oneCom['created_utc']):
-                cntSub +=1
-                producer.produce(
-                    topic=topic[0],
-                    key=str(cntSub),  
-                    value=json.dumps(oneSub),  # convert dict -> JSON string
-                    callback=deliveryCallback
-                )
-                producer.poll(1)
-                oneSub = readOneLineJson(fRS)
-            elif oneCom and (not oneSub or oneCom['created_utc'] <= oneSub['created_utc']):
-                cntCom+=1
-                producer.produce(
-                    topic=topic[1],
-                    key=str(cntCom),  
-                    value=json.dumps(oneCom),  # convert dict -> JSON string
-                    callback=deliveryCallback
-                )
-                producer.poll(1)
-                oneCom = readOneLineJson(fRC)
-            else:
-                print("waiting for luv...")
-            time.sleep(2)
+    while True:
+        if oneSub and (not oneCom or oneSub["created_utc"] <= oneCom["created_utc"]):
+            cntSub += 1
+            producer.produce(
+                topic=rsrcTopic[0],
+                key=str(cntSub),
+                value=json.dumps(oneSub, default=str),
+                callback=deliveryCallback
+            )
+            saveCheckpoint(mongoDB, checkpointColl, str(oneSub["_id"]), "posts", cntSub)
 
-    # Block until the messages are sent.
+            producer.poll(1)
+            oneSub = readRecord(cursorPost)
+
+        elif oneCom and (not oneSub or oneCom["created_utc"] <= oneSub["created_utc"]):
+            cntCom += 1
+            producer.produce(
+                topic=rsrcTopic[1],
+                key=str(cntCom),
+                value=json.dumps(oneCom, default=str),
+                callback=deliveryCallback
+            )
+            saveCheckpoint(mongoDB, checkpointColl, str(oneCom["_id"]), "comments", cntCom)
+
+            producer.poll(1)
+            oneCom = readRecord(cursorComment)
+
+        else:
+            print("No new posts/comments... waiting...")
+        time.sleep(5)
+
     producer.flush()
 
 
 if __name__ == '__main__':
-    rsrcURL = ["/home/confluent_kafka_user/data/RS_reddit.jsonl", "/home/confluent_kafka_user/data/RC_reddit.jsonl"]
     rsrcTopic = ["redditSubmission", "redditComment"]
 
     config = {
-        'bootstrap.servers': 'kafka1:9092',
-        # Fixed properties
-        'acks': 'all'
+        "bootstrap.servers": "kafka1:9092",
+        "acks": "all"
     }
 
-    producerRS_RC(rsrcURL, rsrcTopic, config)
-
-
-                
-
-
+    producerRS_RC(postColl, cmtColl, rsrcTopic, config, checkpointColl, mongoDB)
