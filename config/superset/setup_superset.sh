@@ -10,13 +10,13 @@ TRINO_CONN_URI="trino://admin@trino-coordinator:8080/iceberg"
 
 EXPORT_ZIP_PATH="./dashboard/redditdashboard.zip"  
 
-echo "=== Thiết lập Superset ==="
+echo "setup Superset"
 
-docker exec -it $SUPERSET_CONTAINER sh -c "
-    echo '=== Khởi tạo database ===' &&
+docker exec -it $SUPERSET_CONTAINER bash -c "
+    echo 'init database' &&
     superset db upgrade &&
 
-    echo '=== Tạo admin user ===' &&
+    echo 'create User' &&
     superset fab create-admin \
       --username $SUPERSET_ADMIN_USER \
       --firstname Superset \
@@ -24,27 +24,25 @@ docker exec -it $SUPERSET_CONTAINER sh -c "
       --email $SUPERSET_ADMIN_EMAIL \
       --password $SUPERSET_ADMIN_PASSWORD &&
 
-    echo '=== Khởi tạo roles ===' &&
+    echo 'init role' &&
     superset init &&
-    echo '=== Cài đặt driver Trino ===' && 
+    echo 'install Trino' && 
     pip install trino sqlalchemy-trino &&
-    echo '=== Tạo kết nối Trino ===' &&
+    echo 'create connect Trino' &&
     superset set-database-uri \
       --database-name \"$TRINO_CONN_NAME\" \
       --uri \"$TRINO_CONN_URI\"
 "
 
-# =========================
 # Import Dashboard Zip
-# =========================
 if [ -f "$EXPORT_ZIP_PATH" ]; then
-    echo "=== Giải nén file export dashboard ==="
+    echo "export dashboard"
     TMP_DIR="./superset_import_tmp"
     rm -rf "$TMP_DIR"
     mkdir -p "$TMP_DIR"
     unzip -q "$EXPORT_ZIP_PATH" -d "$TMP_DIR"
 
-    echo "=== Import datasets trước ==="
+    echo "import dataset"
     if [ -d "$TMP_DIR/datasets" ]; then
         for ds in "$TMP_DIR"/datasets/*.yaml; do
             echo "Import dataset: $ds"
@@ -54,21 +52,21 @@ if [ -f "$EXPORT_ZIP_PATH" ]; then
                 --username $SUPERSET_ADMIN_USER
         done
     else
-        echo "Không tìm thấy thư mục datasets trong file export."
+        echo "there no folder datasets in file export."
     fi
 
-    echo "=== Import dashboards sau ==="
+    echo "Import dashboards"
     docker cp "$EXPORT_ZIP_PATH" $SUPERSET_CONTAINER:/tmp/redditdashboard.zip
-    docker exec -it $SUPERSET_CONTAINER sh -c "
+    docker exec -it $SUPERSET_CONTAINER bash -c "
         superset import-dashboards \
             --path /tmp/redditdashboard.zip \
             --username $SUPERSET_ADMIN_USER
     "
 else
-    echo "Không tìm thấy file export dashboard: $EXPORT_ZIP_PATH"
+    echo "not found file export dashboard: $EXPORT_ZIP_PATH"
 fi
 
-echo "=== Khởi động lại Superset ==="
+echo "restart superset"
 docker restart $SUPERSET_CONTAINER
 
-echo "HOÀN TẤT! Truy cập http://localhost:8088"
+echo "success http://localhost:8088"
