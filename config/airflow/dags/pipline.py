@@ -138,14 +138,24 @@ submitGoldDim = SSHOperator(
     dag=dag,
     do_xcom_push=False,
 )
-submitGoldFact = SSHOperator(
-    task_id='submit_gold_fact',
+submitFactPost = SSHOperator(
+    task_id='submit_fact_post',
     ssh_conn_id='ssh_spark_client',
-    command="bash -lc 'cd ~/spark_submit && spark-submit --py-files transformer.zip,utils.zip mainFactGold.py'",
+    command="bash -lc 'cd ~/spark_submit && spark-submit --py-files transformer.zip,utils.zip mainFactPost.py'",
     dag=dag,
+    cmd_timeout=600,
     do_xcom_push=False,
 )
 
+
+submitFactCmt = SSHOperator(
+    task_id='submit_fact_cmt',
+    ssh_conn_id='ssh_spark_client',
+    command="bash -lc 'cd ~/spark_submit && spark-submit --py-files transformer.zip,utils.zip mainFactCmt.py'",
+    dag=dag,
+    cmd_timeout=600,
+    do_xcom_push=False,
+)
 # Refresh Superset
 # ssh_superset_refresh = SSHOperator(
 #     task_id='refresh_superset',
@@ -161,7 +171,7 @@ deleteCheckpointMongoDB >> createTopic >> startDFS >> startYARN >> [createBronze
 
 # Producer,submit streaming jobs (Bronze,Silver,Gold in parallel)
 createDimTblGold >> produceData >> sshBronzeSubmit
-sshBronzeSubmit >> [submitSilverSub, submitSilverCmt] >> submitGoldDim >> submitGoldFact
+sshBronzeSubmit >> [submitSilverSub, submitSilverCmt] >> submitGoldDim >> [submitFactPost,submitFactCmt]
 
 # Refresh Superset
 # [submitSilverSub, submitSilverCmt, submitGoldDim, submitGoldFact] >> ssh_superset_refresh
